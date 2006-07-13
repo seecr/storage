@@ -63,9 +63,7 @@ class StorageTest(unittest.TestCase):
 		self.assertTrue(fileStorage.isStored(anId))
 		try:
 			f = fileStorage.fetch(anId)
-			strm = cStringIO.StringIO()
-			f.getPartNamed('a name', strm)
-			contents = strm.getvalue()
+			contents = f.partAsString('a name')
 		finally:
 			f.close()
 		self.assertEquals('contents\n', contents)
@@ -83,9 +81,7 @@ class StorageTest(unittest.TestCase):
 
 		try:
 			f = fileStorage.fetch(anId)
-			strm = cStringIO.StringIO()
-			f.getPartNamed('a name', strm)
-			contents = strm.getvalue()
+			contents = f.partAsString('a name')
 		finally:
 			f.close()
 		self.assertEquals('contents2\n', contents)
@@ -106,7 +102,7 @@ class StorageTest(unittest.TestCase):
 		try:
 			f = fileStorage.fetch(anId)
 			try:
-				contents = f.getPartNamed('a name')
+				contents = f.partAsString('a name')
 			finally:
 				f.close()
 			self.fail()

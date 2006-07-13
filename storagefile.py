@@ -57,10 +57,6 @@ Content-type: %s; name="%s"
 		self.writePartToStream(partName, strm)
 		return strm.getvalue()
 	
-	#TODO: SS: 2006-07-13 - To remove after testing run properly -replaced by writePartToStream	
-	def getPartNamed(self, partName, aStream):
-		return self.writePartToStream(partName, aStream)
-
 	def writePartToStream(self, partName, aStream):
 		if partName in self._partsList:
 			return self.getPartAtFileIndex(self._partsList[partName], aStream)
