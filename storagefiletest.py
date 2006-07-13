@@ -85,35 +85,27 @@ class StorageFileTest(unittest.TestCase):
 		stream.seek(0L)
 		
 		sf = storagefile.StorageFile(stream, mode='r')
-		strm = StringIO()
-		sf.getPartNamed('part one', strm)
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
 
 	def testReadFileWithTwoMultipart(self):
 		stream = getAnIOString()
 		stream.write(TWOPARTMESSAGE % {'boundary':storagefile.BOUNDARY})
 		stream.seek(0L)
 		
-		strm = StringIO()
 		sf = storagefile.StorageFile(stream, mode='r')
-		sf.getPartNamed('part one', strm)
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
 		
-		strm = StringIO()
-		sf.getPartNamed('part two', strm)
-		self.assertEquals('aap noot mies\n', strm.getvalue())
+		self.assertEquals('aap noot mies\n', sf.partAsString('part two'))
 
 	def testSpeed(self):
 		stream = StringIO(TWOPARTMESSAGE % {'boundary':storagefile.BOUNDARY})
 		sf = storagefile.StorageFile(stream, mode='r')
 		
-		strm = StringIO()
-		sf.getPartNamed('part one', strm)		
+		sf.partAsString('part one')
 		self.assertEquals(83, sf._partsList['part one'])
 		self.assertEquals(['part one'], sf._partsList.keys())
 		
-		strm = StringIO()
-		sf.getPartNamed('part two', strm)
+		sf.partAsString('part two')
 		self.assertEquals(['part two', 'part one'], sf._partsList.keys())
 
 	def testReread(self):
@@ -121,29 +113,17 @@ class StorageFileTest(unittest.TestCase):
 		sf = storagefile.StorageFile(stream, mode='r')
 		stream.seek(0L)
 		
-		strm = StringIO()
-		sf.getPartNamed('part two', strm)
-		self.assertEquals('aap noot mies\n', strm.getvalue())
+		self.assertEquals('aap noot mies\n', sf.partAsString('part two'))
 		
-		strm = StringIO()
-		sf.getPartNamed('part one', strm)
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
 		
-		strm = StringIO()
-		sf.getPartNamed('part two', strm)
-		self.assertEquals('aap noot mies\n', strm.getvalue())
+		self.assertEquals('aap noot mies\n', sf.partAsString('part two'))
 		
-		strm = StringIO()
-		sf.getPartNamed('part one', strm)
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
 		
-		strm = StringIO()
-		sf.getPartNamed('part two', strm)
-		self.assertEquals('aap noot mies\n', strm.getvalue())
+		self.assertEquals('aap noot mies\n', sf.partAsString('part two'))
 		
-		strm = StringIO()
-		sf.getPartNamed('part one', strm)
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
 
 
 if __name__ == '__main__':

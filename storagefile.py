@@ -52,9 +52,18 @@ Content-type: %s; name="%s"
 		finally:
 			self._stream.seek(currentPosition)
 			
-	def getPartNamed(self, aString, aStream):
-		if aString in self._partsList:
-			return self.getPartAtFileIndex(self._partsList[aString], aStream)
+	def partAsString(self, partName):
+		strm = cStringIO.StringIO()
+		self.writePartToStream(partName, strm)
+		return strm.getvalue()
+	
+	#TODO: SS: 2006-07-13 - To remove after testing run properly -replaced by writePartToStream	
+	def getPartNamed(self, partName, aStream):
+		return self.writePartToStream(partName, aStream)
+
+	def writePartToStream(self, partName, aStream):
+		if partName in self._partsList:
+			return self.getPartAtFileIndex(self._partsList[partName], aStream)
 		
 		while self._file.next():
 			position = self._stream.tell()
@@ -62,7 +71,6 @@ Content-type: %s; name="%s"
 			name = 'name' in message.getparamnames() and message.getparam('name') or None
 			if name:
 				self._partsList[name] =  position
-			if name == aString:
+			if name == partName:
 				mimetools.decode(self._file, aStream, message.getencoding())
 				break
-
