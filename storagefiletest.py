@@ -1,3 +1,26 @@
+## begin license ##
+#
+#    Storage stores data in a reliable, extendable filebased storage
+#    with great performance.
+#    Copyright (C) 2006 Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+#    This file is part of Storage.
+#
+#    Storage is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    Storage is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with Storage; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+## end license ##
 #
 # Storage File Test
 #
@@ -85,27 +108,35 @@ class StorageFileTest(unittest.TestCase):
 		stream.seek(0L)
 		
 		sf = storagefile.StorageFile(stream, mode='r')
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
+		strm = StringIO()
+		sf.getPartNamed('part one', strm)
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
 
 	def testReadFileWithTwoMultipart(self):
 		stream = getAnIOString()
 		stream.write(TWOPARTMESSAGE % {'boundary':storagefile.BOUNDARY})
 		stream.seek(0L)
 		
+		strm = StringIO()
 		sf = storagefile.StorageFile(stream, mode='r')
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
+		sf.getPartNamed('part one', strm)
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
 		
-		self.assertEquals('aap noot mies\n', sf.partAsString('part two'))
+		strm = StringIO()
+		sf.getPartNamed('part two', strm)
+		self.assertEquals('aap noot mies\n', strm.getvalue())
 
 	def testSpeed(self):
 		stream = StringIO(TWOPARTMESSAGE % {'boundary':storagefile.BOUNDARY})
 		sf = storagefile.StorageFile(stream, mode='r')
 		
-		sf.partAsString('part one')
+		strm = StringIO()
+		sf.getPartNamed('part one', strm)		
 		self.assertEquals(83, sf._partsList['part one'])
 		self.assertEquals(['part one'], sf._partsList.keys())
 		
-		sf.partAsString('part two')
+		strm = StringIO()
+		sf.getPartNamed('part two', strm)
 		self.assertEquals(['part two', 'part one'], sf._partsList.keys())
 
 	def testReread(self):
@@ -113,17 +144,29 @@ class StorageFileTest(unittest.TestCase):
 		sf = storagefile.StorageFile(stream, mode='r')
 		stream.seek(0L)
 		
-		self.assertEquals('aap noot mies\n', sf.partAsString('part two'))
+		strm = StringIO()
+		sf.getPartNamed('part two', strm)
+		self.assertEquals('aap noot mies\n', strm.getvalue())
 		
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
+		strm = StringIO()
+		sf.getPartNamed('part one', strm)
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
 		
-		self.assertEquals('aap noot mies\n', sf.partAsString('part two'))
+		strm = StringIO()
+		sf.getPartNamed('part two', strm)
+		self.assertEquals('aap noot mies\n', strm.getvalue())
 		
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
+		strm = StringIO()
+		sf.getPartNamed('part one', strm)
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
 		
-		self.assertEquals('aap noot mies\n', sf.partAsString('part two'))
+		strm = StringIO()
+		sf.getPartNamed('part two', strm)
+		self.assertEquals('aap noot mies\n', strm.getvalue())
 		
-		self.assertEquals('<a><b>1</b><b>2</b></a>\n', sf.partAsString('part one'))
+		strm = StringIO()
+		sf.getPartNamed('part one', strm)
+		self.assertEquals('<a><b>1</b><b>2</b></a>\n', strm.getvalue())
 
 
 if __name__ == '__main__':

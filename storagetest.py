@@ -1,3 +1,26 @@
+## begin license ##
+#
+#    Storage stores data in a reliable, extendable filebased storage
+#    with great performance.
+#    Copyright (C) 2006 Seek You Too B.V. (CQ2) http://www.cq2.nl
+#
+#    This file is part of Storage.
+#
+#    Storage is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    Storage is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with Storage; if not, write to the Free Software
+#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+## end license ##
 #
 # Storage Test
 #
@@ -63,7 +86,9 @@ class StorageTest(unittest.TestCase):
 		self.assertTrue(fileStorage.isStored(anId))
 		try:
 			f = fileStorage.fetch(anId)
-			contents = f.partAsString('a name')
+			strm = cStringIO.StringIO()
+			f.getPartNamed('a name', strm)
+			contents = strm.getvalue()
 		finally:
 			f.close()
 		self.assertEquals('contents\n', contents)
@@ -81,7 +106,9 @@ class StorageTest(unittest.TestCase):
 
 		try:
 			f = fileStorage.fetch(anId)
-			contents = f.partAsString('a name')
+			strm = cStringIO.StringIO()
+			f.getPartNamed('a name', strm)
+			contents = strm.getvalue()
 		finally:
 			f.close()
 		self.assertEquals('contents2\n', contents)
@@ -102,7 +129,7 @@ class StorageTest(unittest.TestCase):
 		try:
 			f = fileStorage.fetch(anId)
 			try:
-				contents = f.partAsString('a name')
+				contents = f.getPartNamed('a name')
 			finally:
 				f.close()
 			self.fail()
