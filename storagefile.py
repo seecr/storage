@@ -75,7 +75,7 @@ Content-type: %s; name="%s"
 		finally:
 			self._stream.seek(currentPosition)
 			
-	def getPartNamed(self, aString, aStream):
+	def writePartToStream(self, aString, aStream):
 		if aString in self._partsList:
 			return self.getPartAtFileIndex(self._partsList[aString], aStream)
 		
