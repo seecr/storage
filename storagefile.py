@@ -24,8 +24,6 @@
 #
 # Storage File
 #
-# $Id: storagefile.py,v 1.4 2006/04/11 09:29:53 cvs Exp $
-#
 
 import multifile
 import mimetools
@@ -74,10 +72,15 @@ Content-type: %s; name="%s"
 			mimetools.decode(m, aStream, message.getencoding())
 		finally:
 			self._stream.seek(currentPosition)
-			
-	def writePartToStream(self, aString, aStream):
-		if aString in self._partsList:
-			return self.getPartAtFileIndex(self._partsList[aString], aStream)
+
+	def partAsString(self, partName):
+		strm = cStringIO.StringIO()
+		self.writePartToStream(partName, strm)
+		return strm.getvalue()
+		
+	def writePartToStream(self, partName, aStream):
+		if partName in self._partsList:
+			return self.getPartAtFileIndex(self._partsList[partName], aStream)
 		
 		while self._file.next():
 			position = self._stream.tell()
@@ -85,7 +88,7 @@ Content-type: %s; name="%s"
 			name = 'name' in message.getparamnames() and message.getparam('name') or None
 			if name:
 				self._partsList[name] =  position
-			if name == aString:
+			if name == partName:
 				mimetools.decode(self._file, aStream, message.getencoding())
 				break
 
