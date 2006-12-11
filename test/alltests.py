@@ -30,8 +30,10 @@
 # on Tue Apr 11 14:58:34 CEST 2006 by johan
 #
 
-import os
+import os, sys
 os.system('rm *.pyc')
+
+sys.path.insert(0, '../src/')
 
 import unittest
 
