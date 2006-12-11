@@ -22,13 +22,6 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Generated with:
-#
-# $Id: gen_alltests.sh,v 1.6 2006/03/16 08:06:56 cvs Exp $
-#
-# on Tue Apr 11 14:58:34 CEST 2006 by johan
-#
 
 import os, sys
 os.system('rm *.pyc')
@@ -39,6 +32,8 @@ import unittest
 
 from storagefiletest import StorageFileTest
 from storagetest import StorageTest
+from hextest import HexTest
+from hashertest import HashTest
 
 if __name__ == '__main__':
         unittest.main()

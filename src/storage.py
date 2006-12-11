@@ -21,11 +21,6 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Storage
-#
-# $Id: storage.py,v 1.12 2006/03/09 09:09:55 cvs Exp $
-#
 
 import os
 import errno

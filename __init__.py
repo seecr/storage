@@ -22,15 +22,6 @@
 #
 ## end license ##
 
-import unittest
-import hex
+from src.storage import Storage
+from src import hex, hasher, storagefile
 
-class HexTest(unittest.TestCase):
-	
-	def testHexString(self):
-		self.assertEquals('any string', hex.hexStringToString(hex.stringToHexString('any string')))
-		
-	#ev. toekomst: fout-checken, unicode
-				
-if __name__ == '__main__':
-    unittest.main()

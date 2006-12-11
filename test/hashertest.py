@@ -21,11 +21,6 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Hasher Test
-#
-# $Id: hashertest.py,v 1.2 2006/02/14 11:32:34 cvs Exp $
-#
 
 import unittest
 import hasher

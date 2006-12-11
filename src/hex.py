@@ -21,11 +21,7 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Hex
-#
-# $Id: hex.py,v 1.2 2006/02/21 12:13:24 cvs Exp $
-#
+
 import sys
 
 def stringToHexString(aString):

@@ -21,11 +21,6 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Storage File Test
-#
-# $Id: storagefiletest.py,v 1.4 2006/04/11 09:29:53 cvs Exp $
-#
 
 import unittest
 from StringIO import StringIO
