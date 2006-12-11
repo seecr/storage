@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ## begin license ##
 #
 #    Storage stores data in a reliable, extendable filebased storage
@@ -21,21 +22,19 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Hex Test
-#
-# $Id: hextest.py,v 1.1 2006/02/14 14:40:06 cvs Exp $
-#
+
+import os, sys
+os.system('rm *.pyc')
+
+sys.path.insert(0, '../src/')
 
 import unittest
-import hex
 
-class HexTest(unittest.TestCase):
-	
-	def testHexString(self):
-		self.assertEquals('any string', hex.hexStringToString(hex.stringToHexString('any string')))
-		
-	#ev. toekomst: fout-checken, unicode
-				
+from storagefiletest import StorageFileTest
+from storagetest import StorageTest
+from hextest import HexTest
+from hashertest import HashTest
+
 if __name__ == '__main__':
-    unittest.main()
+        unittest.main()
+

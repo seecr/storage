@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 #    Storage stores data in a reliable, extendable filebased storage
@@ -22,22 +21,24 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Generated with:
-#
-# $Id: gen_alltests.sh,v 1.6 2006/03/16 08:06:56 cvs Exp $
-#
-# on Tue Apr 11 14:58:34 CEST 2006 by johan
-#
-
-import os
-os.system('rm *.pyc')
 
 import unittest
+import hasher
 
-from storagefiletest import StorageFileTest
-from storagetest import StorageTest
+class HashTest(unittest.TestCase):
+
+	def testHash(self):
+		myHasher = hasher.Hasher()
+	
+		self.assertEquals('98bf7d8c15784f0a3d63204441e1e2aa', myHasher.hash('contents'))
+		
+	def testHashingIsConsistent(self):
+		myHasher = hasher.Hasher()
+		self.assertEquals(myHasher.hash("a"), myHasher.hash("a"))
+	
+	def testUnicode(self):
+		myHasher = hasher.Hasher()
+		self.assertEquals(myHasher.hash("a"), myHasher.hash(u"a"))
 
 if __name__ == '__main__':
-        unittest.main()
-
+	unittest.main()

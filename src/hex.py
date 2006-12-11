@@ -21,15 +21,38 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
-#
-# Hasher
-#
-# $Id: hasher.py,v 1.3 2006/02/15 13:27:20 cvs Exp $
-#
 
-import md5
+import sys
 
-class Hasher:
+def stringToHexString(aString):
+	result = ""
+	for char in aString:
+		result += charToHexString(char)
+	return result
 	
-    def hash(self, aString):
-        return md5.md5(aString).hexdigest()
+def charToHexString(aChar):
+	i = ord(aChar)
+	l = i >> 4
+	r = i % 16
+	return nrToHexString(l) + nrToHexString(r)
+	
+def nrToHexString(nr):
+	if 0 <= nr <= 9:
+		 return str(nr)
+	return chr(ord("A") + nr - 10)
+
+def hexStringToString(aHexString):
+	if len(aHexString) == 0:
+		 return ""
+	return hexByteToChar(aHexString[0:2]) + hexStringToString(aHexString[2:])
+	
+def hexByteToChar(aHexByte):
+	return chr(hexToNr(aHexByte[0]) * 16 + hexToNr(aHexByte[1]))
+	
+def hexToNr(aHex):
+	if "0" <= aHex <= "9":
+		 return int(aHex)
+	return ord(aHex) - ord("A") + 10
+
+if __name__ == "__main__":
+	print stringToHexString(sys.stdin.read())
