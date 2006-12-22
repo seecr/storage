@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.5
 ## begin license ##
 #
 #    Storage stores data in a reliable, extendable filebased storage
@@ -24,17 +24,15 @@
 ## end license ##
 
 import os, sys
-os.system('rm *.pyc')
+os.system('rm -f *.pyc ../src/*.pyc')
 
 sys.path.insert(0, '../src/')
 
 import unittest
 
-from storagefiletest import StorageFileTest
 from storagetest import StorageTest
 from hextest import HexTest
 from hashertest import HashTest
 
 if __name__ == '__main__':
-        unittest.main()
-
+	unittest.main()

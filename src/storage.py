@@ -23,10 +23,9 @@
 ## end license ##
 
 import os
-import errno
-import hasher
-import hex
-import storagefile
+from hex import stringToHexString, hexStringToString
+from hasher import Hasher
+from glob import glob
 
 def _directoryForHash(aHash):
 	return os.path.sep.join(aHash[0:4])
@@ -34,49 +33,62 @@ def _directoryForHash(aHash):
 class StorageException(Exception):
 	pass
 
+
 class Storage:
 
-	def __init__(self, aBaseDirectory, aHasher = hasher.Hasher()):
-		self._hasher = aHasher
+	def __init__(self, aBaseDirectory, hasher = Hasher()):
+		self._hasher = hasher
 		self._baseDirectory = aBaseDirectory
-		if not os.path.exists(self._baseDirectory):
+		if not os.path.isdir(self._baseDirectory):
 			os.makedirs(self._baseDirectory)
 
 	""" API """
-	def store(self, anId):
-		hashDir = self._hashDirectory(anId)
-		if not os.path.exists(hashDir):
-			os.makedirs(hashDir)
-		return storagefile.StorageFile(open(self.filenameFor(anId), 'w'), 'w')
+	def getUnit(self, anId):
+		baseName = self._baseFilenameFor(anId)
+		return Unit(anId, baseName)
 
 	""" API """
-	def isStored(self, anId):
-		return os.path.isfile(self.filenameFor(anId))
+	def hasUnit(self, anId):
+		return self.getUnit(anId).exists()
 
 	""" API """
-	def fetch(self, anId):
-		try:
-			return storagefile.StorageFile(open(self.filenameFor(anId)), 'r')
-		except IOError, e:
-			if e.errno == errno.ENOENT:
-				raise StorageException("File not found for " + anId)
+	def removeUnit(self, anId):
+		raise Exception('self.needsMoreWork')
 
-	""" API """
-	def remove(self, anId):
+	def _baseFilenameFor(self, anId):
 		if not anId:
 			raise StorageException("Invalid Id")
-
-		filename = self.filenameFor(anId)
-		if not os.path.isfile(filename):
-			raise StorageException("No such document")
-			
-		os.remove(filename)
-		
-
-	def filenameFor(self, anId):
-		if not anId:
-			raise StorageException("Invalid Id")
-		return os.path.join(self._hashDirectory(anId), hex.stringToHexString(anId))
+		return os.path.join(self._hashDirectory(anId), stringToHexString(anId))
 
 	def _hashDirectory(self, anId):
 		return os.path.join(self._baseDirectory, _directoryForHash(self._hasher.hash(anId)))
+	
+
+class Unit:
+	def __init__(self, identifier, baseName):
+		self._identifier = identifier
+		self._baseName = baseName
+		
+	def getId(self):
+		return self._identifier
+	
+	def getBaseName(self):
+		return self._baseName
+	
+	def exists(self):
+		return len(glob(self._baseName + '.*')) > 0
+	
+	def openBox(self, boxName, mode = 'r'):
+		if not boxName:
+			raise StorageException("Invalid boxname")
+		
+		filename = self._baseName + '.' + stringToHexString(boxName)
+		
+		dirname = os.path.dirname(filename)
+		os.path.isdir(dirname) or os.makedirs(dirname)
+		
+		return open(filename, mode)
+	
+	def listBoxes(self):
+		return [ hexStringToString(f.split('.')[-1]) for f \
+			in glob(self._baseName + '.*') ]

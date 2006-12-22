@@ -22,154 +22,124 @@
 #
 ## end license ##
 
-import unittest
-import tempfile
-import storage
 import os.path
-import shutil
-import cStringIO
 
-import hex
+from hex import stringToHexString
+from unittest import TestCase
+from storage import Storage, StorageException
+from tempfile import mkdtemp
+from shutil import rmtree
 
-STORAGETEMPLATE = """Content-type: multipart/mixed; boundary="-x-x-BOUNDARY-x-x-"
-
----x-x-BOUNDARY-x-x-
-Content-type: text/plain; name="a name"
-
-%s
----x-x-BOUNDARY-x-x---
-"""
-
-
-class StorageTest(unittest.TestCase):
+class StorageTest(TestCase):
 	def setUp(self):
-		self._tempdir = tempfile.gettempdir()+'/testing'
+		self._tempdir = mkdtemp()
 		self._storagedir = os.path.join(self._tempdir, 'storage')
+		hasher = self
+		self.storage = Storage(self._storagedir, hasher)
 	
 	def tearDown(self):
 		if os.path.exists(self._tempdir):
-			shutil.rmtree(self._tempdir)
+			rmtree(self._tempdir)
 
 	""" self shunt """
 	def hash(self, anId):
 		return '0A2F45A3F15etc'
 
-	def _writeToStorage(self, aStorage, anId, aString):
-		stream = aStorage.store(anId)
-		try:
-			stream.addPart('a name', 'text/plain', aString)
-		finally:
-			stream.close()
-
 	def testCreation(self):
-
-		fileStorage = storage.Storage(self._storagedir, self)
 		self.assertEquals(os.path.exists(self._storagedir), True)
 		self.assertEquals(os.path.isdir(self._storagedir), True)
 		
-	def testStore(self):
-		fileStorage = storage.Storage(self._storagedir, self)
-		anId = 'bestand'
-		self.assertFalse(fileStorage.isStored(anId))
+	def testGetUnit(self):
+		anId = 'anIdentifier'
+		self.assertFalse(self.storage.hasUnit(anId))
 		
-		self._writeToStorage(fileStorage, anId, "contents")
-		filename = self._storagedir+'/0/A/2/F/'+hex.stringToHexString(anId)
+		unit = self.storage.getUnit(anId)
 		
-		self.assertEquals(os.path.exists(filename), True)
-		self.assertEquals(open(filename).read(), STORAGETEMPLATE % "contents", True)
-
-		self.assertTrue(fileStorage.isStored(anId))
+		self.assertEquals(anId, unit.getId())
+		baseName = self._storagedir + '/0/A/2/F/' + stringToHexString(anId)
+		self.assertEquals(baseName, unit.getBaseName())
+		
+	def testWriteToUnit(self):
+		unit = self.storage.getUnit('anId')
+		self.assertFalse(unit.exists())
+		
+		stream = unit.openBox('boxname', 'w')
+		stream.write('data')
+		stream.close()
+		
+		self.assertTrue(unit.exists())
+		
+		filename = self._storagedir + '/0/A/2/F/' + stringToHexString('anId') + '.' + stringToHexString('boxname')
+		self.assertTrue(os.path.isfile(filename))
+		stream = unit.openBox('boxname')
 		try:
-			f = fileStorage.fetch(anId)
-			contents = f.partAsString('a name')
+			self.assertEquals('data', stream.read())
 		finally:
-			f.close()
-		self.assertEquals('contents\n', contents)
+			stream.close()
 
-	def testStoreTwice(self):
-		fileStorage = storage.Storage(self._storagedir, self)
-		
-		anId = 'bestand'
-		self._writeToStorage(fileStorage, anId, "contents")
-		self._writeToStorage(fileStorage, anId, "contents2")
-		filename = self._storagedir+'/0/A/2/F/'+hex.stringToHexString(anId)
-		
-		self.assertEquals(os.path.exists(filename), True)
-		self.assertEquals(open(filename).read(), STORAGETEMPLATE % "contents2", True)
 
+	def testReadFromUnit(self):
+		unit = self.storage.getUnit('anId')
+		stream = unit.openBox('boxname', 'w')
+		stream.write('data')
+		stream.close()
+
+		stream = unit.openBox('boxname')
 		try:
-			f = fileStorage.fetch(anId)
-			contents = f.partAsString('a name')
+			self.assertEquals('data', stream.read())
 		finally:
-			f.close()
-		self.assertEquals('contents2\n', contents)
-
-
-	def testDisappearingFile(self):
-		fileStorage = storage.Storage(self._storagedir, self)
+			stream.close()
 		
-		anId = 'bestand'
-		self._writeToStorage(fileStorage, anId, "contents")
-		filename = self._storagedir+'/0/A/2/F/'+hex.stringToHexString(anId)
+	def testListBoxes(self):
+		unit = self.storage.getUnit('anId')
+		self.assertEquals([], unit.listBoxes())
+		unit.openBox('boxname', 'w').close()
+		self.assertEquals(set(['boxname']), set(unit.listBoxes()))
+		unit.openBox('boxname2', 'w').close()
+		self.assertEquals(set(['boxname', 'boxname2']), set(unit.listBoxes()))
 		
-		self.assertEquals(os.path.exists(filename), True)
-		self.assertEquals(open(filename).read(), STORAGETEMPLATE % "contents", True)
-
-		os.remove(filename)
-	
+	def testWriteTwice(self):
+		unit = self.storage.getUnit('anId')
+		# write one
+		stream = unit.openBox('boxname', 'w')
+		stream.write('data')
+		stream.close()
+		# write again
+		stream = unit.openBox('boxname', 'w')
+		stream.write('otherdata')
+		stream.close()
+		# read
+		stream = unit.openBox('boxname')
 		try:
-			f = fileStorage.fetch(anId)
+			self.assertEquals('otherdata', stream.read())
+		finally:
+			stream.close()
+		
+	def testEmptyId(self):
+		def assertWrongId(anId):
 			try:
-				contents = f.partAsString('a name')
-			finally:
-				f.close()
-			self.fail()
-		except storage.StorageException, e:
-			self.assertEquals("File not found for " + anId, str(e))
-
-	def testAddJunkToStorage(self):
-		fileStorage = storage.Storage(self._storagedir, self)
-		try:
-			self._writeToStorage(fileStorage, '', "contents")
-			self.fail()
-		except storage.StorageException, e:
-			self.assertEquals("Invalid Id", str(e))
-
-		try:
-			self._writeToStorage(fileStorage, None, "contents")
-			self.fail()
-		except storage.StorageException, e:
-			self.assertEquals("Invalid Id", str(e))
-
-	def testRemoveNoID(self):
-		fileStorage = storage.Storage(self._storagedir, self)
+				self.storage.getUnit(anId)
+				self.fail()
+			except StorageException, e:
+				pass
+		assertWrongId('')
+		assertWrongId(None)
 		
-		try:
-			fileStorage.remove('')
-			self.fail()
-		except:
-			pass
-
-	def testRemove(self):
-		fileStorage = storage.Storage(self._storagedir, self)
-		myId = '1'
+	def testEmptyBoxName(self):
+		unit = self.storage.getUnit('anId')
+		def assertWrongBoxName(name):
+			try:
+				unit.openBox(name, 'w')
+				self.fail()
+			except StorageException, e:
+				pass
+		assertWrongBoxName('')
+		assertWrongBoxName(None)
 		
-		self._writeToStorage(fileStorage, myId, "contents")
-		self.assertTrue(fileStorage.isStored(myId))
-		fileStorage.remove(myId)
-		self.assertFalse(fileStorage.isStored(myId))
+	
+	# storage.removeUnit
+	# unit.remove
+	# unit.removeBox
+	#errors:
+	# - wrong write mode
 
-	def testRemoveBadId(self):
-		fileStorage = storage.Storage(self._storagedir, self)
-		badId = '2'
-		
-		self.assertFalse(fileStorage.isStored(badId))
-		try:
-			fileStorage.remove(badId)
-			self.fail()
-		except:
-			pass
-		self.assertFalse(fileStorage.isStored(badId))
-
-if __name__ == '__main__':
-	unittest.main()
