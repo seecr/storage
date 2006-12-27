@@ -53,7 +53,7 @@ class Storage:
 
 	""" API """
 	def removeUnit(self, anId):
-		raise Exception('self.needsMoreWork')
+		self.getUnit(anId).remove()
 
 	def _baseFilenameFor(self, anId):
 		if not anId:
@@ -82,13 +82,24 @@ class Unit:
 		if not boxName:
 			raise StorageException("Invalid boxname")
 		
-		filename = self._baseName + '.' + stringToHexString(boxName)
+		filename = self._boxFilename(boxName)
 		
 		dirname = os.path.dirname(filename)
 		os.path.isdir(dirname) or os.makedirs(dirname)
 		
 		return open(filename, mode)
 	
+	def _boxFilename(self, boxName):
+		return self._baseName + '.' + stringToHexString(boxName)
+	
 	def listBoxes(self):
 		return [ hexStringToString(f.split('.')[-1]) for f \
 			in glob(self._baseName + '.*') ]
+		
+	def remove(self):
+		for boxName in self.listBoxes():
+			self.removeBox(boxName)
+			
+	def removeBox(self, boxName):
+		if os.path.isfile(self._boxFilename(boxName)):
+			os.remove(self._boxFilename(boxName))

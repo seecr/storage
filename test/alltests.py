@@ -26,7 +26,7 @@
 import os, sys
 os.system('rm -f *.pyc ../src/*.pyc')
 
-sys.path.insert(0, '../src/')
+sys.path.insert(0, os.path.abspath(os.getcwd() + '/../src'))
 
 import unittest
 

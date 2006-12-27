@@ -136,10 +136,40 @@ class StorageTest(TestCase):
 		assertWrongBoxName('')
 		assertWrongBoxName(None)
 		
-	
-	# storage.removeUnit
-	# unit.remove
-	# unit.removeBox
+	def testRemoveUnit(self):
+		unit = self.storage.getUnit('anId')
+		unit.openBox('boxname', 'w').close()
+		self.assertTrue(self.storage.hasUnit('anId'))
+		self.storage.removeUnit('anId')
+		self.assertFalse(self.storage.hasUnit('anId'))
+		
+	def testRemoveNonExistingUnit(self):
+		self.assertFalse(self.storage.hasUnit('anId'))
+		self.storage.removeUnit('anId')
+		
+	def testRemoveBox(self):
+		unit = self.storage.getUnit('anId')
+		unit.openBox('boxname1', 'w').close()
+		unit.openBox('boxname2', 'w').close()
+		unit.openBox('boxname3', 'w').close()
+		self.assertEquals(set(['boxname1','boxname2', 'boxname3']), set(unit.listBoxes()))
+		unit.removeBox('boxname1')
+		self.assertEquals(set(['boxname2', 'boxname3']), set(unit.listBoxes()))
+		
+	def testRemoveNonExistingBox(self):
+		unit = self.storage.getUnit('anId')
+		unit.openBox('boxname1', 'w').close()
+		self.assertEquals(set(['boxname1']), set(unit.listBoxes()))
+		unit.removeBox('not existing')
+		
+	def testStrangeWriteMode(self):
+		unit = self.storage.getUnit('anId')
+		try:
+			unit.openBox('boxname1', 'strange')
+			self.fail()
+		except ValueError, v:
+			pass
+		
 	#errors:
 	# - wrong write mode
 
