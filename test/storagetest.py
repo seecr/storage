@@ -167,7 +167,7 @@ class StorageTest(TestCase):
 		try:
 			unit.openBox('boxname1', 'strange')
 			self.fail()
-		except ValueError, v:
+		except (IOError, ValueError), v:
 			pass
 		
 	#errors:
