@@ -79,9 +79,6 @@ class Unit:
 		return len(glob(self._baseName + '.*')) > 0
 	
 	def openBox(self, boxName, mode = 'r'):
-		if not boxName:
-			raise StorageException("Invalid boxname")
-		
 		filename = self._boxFilename(boxName)
 		
 		dirname = os.path.dirname(filename)
@@ -89,7 +86,13 @@ class Unit:
 		
 		return open(filename, mode)
 	
+	def hasBox(self, boxName):
+		filename = self._boxFilename(boxName)
+		return os.path.isfile(filename)
+
 	def _boxFilename(self, boxName):
+		if not boxName:
+			raise StorageException("Invalid boxname")
 		return self._baseName + '.' + stringToHexString(boxName)
 	
 	def listBoxes(self):

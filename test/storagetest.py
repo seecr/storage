@@ -98,6 +98,12 @@ class StorageTest(TestCase):
 		unit.openBox('boxname2', 'w').close()
 		self.assertEquals(set(['boxname', 'boxname2']), set(unit.listBoxes()))
 		
+	def testHasBox(self):
+		unit = self.storage.getUnit('anId')
+		self.assertFalse(unit.hasBox('one'))
+		unit.openBox('one', 'w').close()
+		self.assertTrue(unit.hasBox('one'))
+		
 	def testWriteTwice(self):
 		unit = self.storage.getUnit('anId')
 		# write one
