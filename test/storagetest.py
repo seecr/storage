@@ -176,6 +176,27 @@ class StorageTest(TestCase):
 		except (IOError, ValueError), v:
 			pass
 		
-	#errors:
-	# - wrong write mode
+	def testMove(self):
+		unit = self.storage.getUnit('anId')
+		unit.openBox('boxname1', 'w').close()
+		self.assertTrue(unit.hasBox('boxname1'))
+		self.assertFalse(unit.hasBox('boxname2'))
+
+		unit.moveBox('boxname1', 'boxname2')
+		self.assertFalse(unit.hasBox('boxname1'))
+		self.assertTrue(unit.hasBox('boxname2'))
+		
+	def testMoveNotExistingBox(self):
+		unit = self.storage.getUnit('anId')
+		self.assertFalse(unit.hasBox('boxname1'))
+		self.assertFalse(unit.hasBox('boxname2'))
+		unit.moveBox('boxname1', 'boxname2')
+		
+	def testMoveBoxOverExistingBox(self):
+		unit = self.storage.getUnit('anId')
+		unit.openBox('boxname1', 'w').close()
+		unit.openBox('boxname2', 'w').close()
+		unit.moveBox('boxname1', 'boxname2')
+		self.assertFalse(unit.hasBox('boxname1'))
+		self.assertTrue(unit.hasBox('boxname2'))
 

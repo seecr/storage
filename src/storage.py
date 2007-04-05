@@ -106,3 +106,8 @@ class Unit:
 	def removeBox(self, boxName):
 		if os.path.isfile(self._boxFilename(boxName)):
 			os.remove(self._boxFilename(boxName))
+			
+	def moveBox(self, srcBoxName, dstBoxName):
+		if os.path.isfile(self._boxFilename(srcBoxName)):
+			os.rename(self._boxFilename(srcBoxName), self._boxFilename(dstBoxName))
+
