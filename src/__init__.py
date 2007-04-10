@@ -22,4 +22,4 @@
 #
 ## end license ##
 
-from storage import Storage
+from storage import Storage, Unit, StorageException

@@ -34,7 +34,7 @@ class StorageException(Exception):
 	pass
 
 
-class Storage:
+class Storage(object):
 
 	def __init__(self, aBaseDirectory, hasher = Hasher()):
 		self._hasher = hasher
@@ -64,7 +64,7 @@ class Storage:
 		return os.path.join(self._baseDirectory, _directoryForHash(self._hasher.hash(anId)))
 	
 
-class Unit:
+class Unit(object):
 	def __init__(self, identifier, baseName):
 		self._identifier = identifier
 		self._baseName = baseName
@@ -104,10 +104,10 @@ class Unit:
 			self.removeBox(boxName)
 			
 	def removeBox(self, boxName):
-		if os.path.isfile(self._boxFilename(boxName)):
+		if self.hasBox(boxName):
 			os.remove(self._boxFilename(boxName))
 			
 	def moveBox(self, srcBoxName, dstBoxName):
-		if os.path.isfile(self._boxFilename(srcBoxName)):
+		if self.hasBox(srcBoxName):
 			os.rename(self._boxFilename(srcBoxName), self._boxFilename(dstBoxName))
 
