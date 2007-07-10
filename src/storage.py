@@ -25,89 +25,74 @@
 import os
 from hex import stringToHexString, hexStringToString
 from hasher import Hasher
-from glob import glob
+from file import File
 
 def _directoryForHash(aHash):
-	return os.path.sep.join(aHash[0:4])
+    return os.path.sep.join(aHash[0:4])
 
 class StorageException(Exception):
-	pass
+    pass
 
 
 class Storage(object):
 
-	def __init__(self, aBaseDirectory, hasher = Hasher()):
-		self._hasher = hasher
-		self._baseDirectory = aBaseDirectory
-		if not os.path.isdir(self._baseDirectory):
-			os.makedirs(self._baseDirectory)
+    def __init__(self, aBaseDirectory, hasher = Hasher()):
+        self._hasher = hasher
+        self._baseDirectory = aBaseDirectory
+        if not os.path.isdir(self._baseDirectory):
+            os.makedirs(self._baseDirectory)
 
-	""" API """
-	def getUnit(self, anId):
-		baseName = self._baseFilenameFor(anId)
-		return Unit(anId, baseName)
+    """ API """
+    def getUnit(self, anId):
+        if not anId:
+            raise StorageException("Invalid Id")
+        return Unit(anId, self._baseDirFor(anId))
 
-	""" API """
-	def hasUnit(self, anId):
-		return self.getUnit(anId).exists()
+    """ API """
+    def hasUnit(self, anId):
+        return self.getUnit(anId).exists()
 
-	""" API """
-	def removeUnit(self, anId):
-		self.getUnit(anId).remove()
+    """ API """
+    def removeUnit(self, anId):
+        self.getUnit(anId).remove()
 
-	def _baseFilenameFor(self, anId):
-		if not anId:
-			raise StorageException("Invalid Id")
-		return os.path.join(self._hashDirectory(anId), stringToHexString(anId))
-
-	def _hashDirectory(self, anId):
-		return os.path.join(self._baseDirectory, _directoryForHash(self._hasher.hash(anId)))
-	
+    def _baseDirFor(self, anId):
+        return os.path.join(self._baseDirectory, _directoryForHash(self._hasher.hash(anId)))
+    
 
 class Unit(object):
-	def __init__(self, identifier, baseName):
-		self._identifier = identifier
-		self._baseName = baseName
-		
-	def getId(self):
-		return self._identifier
-	
-	def getBaseName(self):
-		return self._baseName
-	
-	def exists(self):
-		return len(glob(self._baseName + '.*')) > 0
-	
-	def openBox(self, boxName, mode = 'r'):
-		filename = self._boxFilename(boxName)
-		
-		dirname = os.path.dirname(filename)
-		os.path.isdir(dirname) or os.makedirs(dirname)
-		
-		return open(filename, mode)
-	
-	def hasBox(self, boxName):
-		filename = self._boxFilename(boxName)
-		return os.path.isfile(filename)
+    def __init__(self, identifier, baseDir):
+        self._identifier = identifier
+        self._file = File(baseDir, identifier, exceptionHandle = self._handleException)
+        
+    def getId(self):
+        return self._identifier
+    
+    def exists(self):
+        return self._file.exists()
+    
+    def openBox(self, boxName, mode = 'r'):
+        return self._file.openExtension(boxName, mode)
+    
+    def hasBox(self, boxName):
+        return self._file.extensionExists(boxName)
 
-	def _boxFilename(self, boxName):
-		if not boxName:
-			raise StorageException("Invalid boxname")
-		return self._baseName + '.' + stringToHexString(boxName)
-	
-	def listBoxes(self):
-		return [ hexStringToString(f.split('.')[-1]) for f \
-			in glob(self._baseName + '.*') ]
-		
-	def remove(self):
-		for boxName in self.listBoxes():
-			self.removeBox(boxName)
-			
-	def removeBox(self, boxName):
-		if self.hasBox(boxName):
-			os.remove(self._boxFilename(boxName))
-			
-	def moveBox(self, srcBoxName, dstBoxName):
-		if self.hasBox(srcBoxName):
-			os.rename(self._boxFilename(srcBoxName), self._boxFilename(dstBoxName))
+    def _handleException(self, message):
+        raise StorageException("Invalid boxname")
+    
+    def listBoxes(self):
+        return self._file.listExtensions() 
+        
+    def remove(self):
+        for boxName in self.listBoxes():
+            self.removeBox(boxName)
+            
+    def removeBox(self, boxName):
+        if self.hasBox(boxName):
+            self._file.removeExtension(boxName)
+            
+    def moveBox(self, srcBoxName, dstBoxName):
+        if self.hasBox(srcBoxName):
+            self._file.renameExtension(srcBoxName, dstBoxName)
+
 

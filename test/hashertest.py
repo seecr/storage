@@ -23,7 +23,7 @@
 ## end license ##
 
 import unittest
-import hasher
+from storage import hasher
 
 class HashTest(unittest.TestCase):
 

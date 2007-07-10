@@ -23,7 +23,7 @@
 ## end license ##
 
 import unittest
-import hex
+from storage import hex
 
 class HexTest(unittest.TestCase):
 	

@@ -26,13 +26,14 @@
 import os, sys
 os.system('rm -f *.pyc ../src/*.pyc')
 
-sys.path.insert(0, os.path.abspath(os.getcwd() + '/../src'))
+sys.path.insert(0, '..')
 
 import unittest
 
 from storagetest import StorageTest
 from hextest import HexTest
 from hashertest import HashTest
+from filetest import FileTest
 
 if __name__ == '__main__':
 	unittest.main()
