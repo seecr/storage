@@ -25,7 +25,7 @@
 import os
 from hex import stringToHexString, hexStringToString
 from hasher import Hasher
-from file import File
+from directory import Directory
 
 def _directoryForHash(aHash):
     return os.path.sep.join(aHash[0:4])
@@ -63,25 +63,25 @@ class Storage(object):
 class Unit(object):
     def __init__(self, identifier, baseDir):
         self._identifier = identifier
-        self._file = File(baseDir, identifier, exceptionHandle = self._handleException)
+        self._directory = Directory(baseDir, identifier, exceptionHandle = self._handleException)
         
     def getId(self):
         return self._identifier
     
     def exists(self):
-        return self._file.exists()
+        return self._directory.exists()
     
     def openBox(self, boxName, mode = 'r'):
-        return self._file.openExtension(boxName, mode)
+        return self._directory.openFile(boxName, mode)
     
     def hasBox(self, boxName):
-        return self._file.extensionExists(boxName)
+        return self._directory.extensionExists(boxName)
 
     def _handleException(self, message):
         raise StorageException("Invalid boxname")
     
     def listBoxes(self):
-        return self._file.listExtensions() 
+        return self._directory.listFiles() 
         
     def remove(self):
         for boxName in self.listBoxes():
@@ -89,10 +89,17 @@ class Unit(object):
             
     def removeBox(self, boxName):
         if self.hasBox(boxName):
-            self._file.removeExtension(boxName)
+            self._directory.removeFile(boxName)
             
     def moveBox(self, srcBoxName, dstBoxName):
         if self.hasBox(srcBoxName):
-            self._file.renameExtension(srcBoxName, dstBoxName)
+            self._directory.renameFile(srcBoxName, dstBoxName)
 
 
+class Box(object):
+    def __init__(self, fileobject):
+        pass
+    
+    def close(self):
+        pass
+    

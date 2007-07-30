@@ -33,7 +33,7 @@ import unittest
 from storagetest import StorageTest
 from hextest import HexTest
 from hashertest import HashTest
-from filetest import FileTest
+from directorytest import DirectoryTest
 
 if __name__ == '__main__':
 	unittest.main()

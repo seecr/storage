@@ -23,4 +23,4 @@
 ## end license ##
 
 from storage import Storage, Unit, StorageException
-from file import File
+from directory import Directory
