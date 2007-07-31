@@ -6,8 +6,8 @@ from errno import ENAMETOOLONG, EINVAL
 from shutil import rmtree
 from re import compile
 
-BAD_CHARS = map(chr, range(33)) + ['/', '%']
-BAD_BASH_CHARS = ['!','@','$','&','<','>', '|', '(',')',';', '*', '`', '\'', '"', '\\']
+BAD_CHARS = map(chr, range(32)) + ['/', '%']
+BAD_BASH_CHARS = ['!','@','$','&','<','>', '|', '(',')',';', '*', '`', '\'', '"', '\\', ' ']
 
 def escapeName(name):
     return ''.join((char in BAD_CHARS and '%%%02X' % ord(char) or char for char in name))
