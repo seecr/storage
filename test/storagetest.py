@@ -1,3 +1,5 @@
+# -*- encoding: UTF-8
+
 
 from unittest import TestCase
 
@@ -63,16 +65,46 @@ class StorageTest(TestCase):
         
         self.assertEquals('data', s2.get('s1').get('mydata').next())
         self.assertEquals('data', s1.get('mydata').next())
-        
+
     def testPutStorageAssumesOwnership(self):
         s1 = Storage(join(self._tempdir, 'basedir1'))
         s2 = Storage(join(self._tempdir, 'basedir2'))
         s2.put('s1', s1)
         self.assertFalse(isdir(join(self._tempdir , 'basedir1')))
+
+    def testCreateTempStorage(self):
+        stemp = Storage()
+        s = Storage(self._tempdir)
+        sink = stemp.put('mydata')
+        sink.send('data')
+        sink.close()
+        s.put('mystore', stemp)
+        self.assertEquals('data', s.get('mystore').get('mydata').next())
+
+    def testStrangeCharactersInName(self):
+        s = Storage()
+        sink = s.put('~!@#$%^&*()_+\/{}[]ç«»´`äëŝÄ')
+        sink.send('data')
+        sink.close()
+        self.assertEquals('data', s.get('~!@#$%^&*()_+\/{}[]ç«»´`äëŝÄ').next())
+
+    def testNameTooLong(self):
+        s = Storage()
+        try:
+            s.put('long'*200)
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'Name too long: " + "long" * 200 + "'", str(e))
+
+    def testNameTooLongForStorage(self):
+        s = Storage()
+        s2 = Storage()
+        try:
+            s.put('long'*200, s2)
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'Name too long: " + "long" * 200 + "'", str(e))
         
-        
-     
-    # geen storage.basedir niet opgegeven
-    # rare tekens,
+
     # naam te lang
     
