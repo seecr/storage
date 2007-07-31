@@ -10,15 +10,16 @@ from os.path import join, isdir, isfile
 
 class StorageTest(TestCase):
     def setUp(self):
-        self._tempdir = join(mkdtemp(), 'storage')
+        self._tempdir = mkdtemp()
     
     def tearDown(self):
         isdir(self._tempdir) and rmtree(self._tempdir)
 
     def testInit(self):
-        self.assertFalse(isdir(self._tempdir))
-        s = Storage(self._tempdir)
-        self.assertTrue(isdir(self._tempdir))
+        myStorageDir = join(self._tempdir, 'myStorage')
+        self.assertFalse(isdir(myStorageDir))
+        s = Storage(myStorageDir)
+        self.assertTrue(isdir(myStorageDir))
         
     def testPutEmptyFile(self):
         s = Storage(self._tempdir)
@@ -82,7 +83,7 @@ class StorageTest(TestCase):
         self.assertEquals('data', s.get('mystore').get('mydata').next())
 
     def testStrangeCharactersInName(self):
-        s = Storage()
+        s = Storage(self._tempdir)
         sink = s.put('~!@#$%^&*()_+\/{}[]ç«»´`äëŝÄ')
         sink.send('data')
         sink.close()
@@ -104,7 +105,17 @@ class StorageTest(TestCase):
             self.fail()
         except KeyError, e:
             self.assertEquals("'Name too long: " + "long" * 200 + "'", str(e))
+
+    def testPutStorageInSameStorage(self):
+        s1 = Storage(join(self._tempdir, 'samedir'))
+        s2 = Storage(join(self._tempdir, 'samedir'))
+        try:
+            s1.put('other', s2)
+            self.fail()
+        except ValueError, e:
+            self.assertEquals("Cannot put Storage inside itself.", str(e))
         
 
-    # naam te lang
-    
+    def testInitialRevision(self):
+        s = Storage()
+        
