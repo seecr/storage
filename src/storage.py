@@ -1,18 +1,19 @@
 
 from os.path import join, isdir
-from os import makedirs, rename
+from os import makedirs, rename, popen3
 from tempfile import mkdtemp
 from errno import ENAMETOOLONG, EINVAL 
 from shutil import rmtree
+from re import compile
 
-BAD_CHARS=['/', chr(0), '%']
-def escapeChar(char):
-    if char in BAD_CHARS:
-        return '%%%02X' % ord(char)
-    return char
+BAD_CHARS = map(chr, range(33)) + ['/', '%']
+BAD_BASH_CHARS = ['!','@','$','&','<','>', '|', '(',')',';', '*', '`', '\'', '"', '\\']
 
 def escapeName(name):
-    return ''.join((escapeChar(char) for char in name))
+    return ''.join((char in BAD_CHARS and '%%%02X' % ord(char) or char for char in name))
+
+def bashEscape(name):
+    return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
         
 
 class Storage(object):
@@ -56,11 +57,23 @@ class Storage(object):
         return open(path)
      
 
-    
+responsePattern = compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
+
 class Sink(object):
     def __init__(self, file):
         self.send = file.write
+        self.name = file.name
+        self.fileno = file.fileno
         self._close = file.close
     
     def close(self):
-        return self._close()
+        self._close()
+        stdin, stdout, stderr = popen3("ci -t-storage -l -mnomesg %s" % bashEscape(self.name))
+        response = stderr.read()
+        result = responsePattern.match(response).groupdict()
+        if result['status'] == 'initial':
+            return 0, int(result['revision1'])
+        if result['status'] == 'unchanged':
+            return int(result['revision1']), int(result['revision1'])
+        if result['status'] == 'new':
+            return int(result['revision2']), int(result['revision1'])

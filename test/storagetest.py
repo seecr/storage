@@ -84,10 +84,10 @@ class StorageTest(TestCase):
 
     def testStrangeCharactersInName(self):
         s = Storage(self._tempdir)
-        sink = s.put('~!@#$%^&*()_+\/{}[]ç«»´`äëŝÄ')
+        sink = s.put('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
         sink.send('data')
         sink.close()
-        self.assertEquals('data', s.get('~!@#$%^&*()_+\/{}[]ç«»´`äëŝÄ').next())
+        self.assertEquals('data', s.get('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ').next())
 
     def testNameTooLong(self):
         s = Storage()
@@ -118,4 +118,30 @@ class StorageTest(TestCase):
 
     def testInitialRevision(self):
         s = Storage()
-        
+        sink = s.put('name')
+        sink.send('data')
+        oldrevision, newrevision = sink.close()
+        self.assertEquals(0, oldrevision)
+        self.assertEquals(1, newrevision)
+
+    def testNewRevision(self):
+        s = Storage()
+        sink = s.put('name')
+        sink.send('data')
+        sink.close()
+        sink = s.put('name')
+        sink.send('otherdata')
+        oldrevision, newrevision = sink.close()
+        self.assertEquals(1, oldrevision)
+        self.assertEquals(2, newrevision)
+
+    def testSameRevision(self):
+        s = Storage()
+        sink = s.put('name')
+        sink.send('data')
+        sink.close()
+        sink = s.put('name')
+        sink.send('data')
+        oldrevision, newrevision = sink.close()
+        self.assertEquals(1, oldrevision)
+        self.assertEquals(1, newrevision)
