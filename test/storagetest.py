@@ -42,6 +42,14 @@ class StorageTest(TestCase):
         sink.close()
         stream = s.get('mydata')
         self.assertEquals('some data of mine', stream.next())
+
+    def testGetNotExistingData(self):
+        s = Storage(self._tempdir)
+        try:
+            s.get('name')
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'name'", str(e))
         
     def testGetAllData(self):
         s = Storage(self._tempdir)
@@ -72,6 +80,25 @@ class StorageTest(TestCase):
         s2 = Storage(join(self._tempdir, 'basedir2'))
         s2.put('s1', s1)
         self.assertFalse(isdir(join(self._tempdir , 'basedir1')))
+
+    def testPutFileOverStorageFails(self):
+        s = Storage(self._tempdir)
+        s.put('name', Storage())
+        try:
+            s.put('name')
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'Key already exists: name'", str(e))
+
+    def testPutStorageOverAFileFails(self):
+        s = Storage(self._tempdir)
+        s.put('name')
+        try:
+            s.put('name', Storage())
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'Key already exists: name'", str(e))
+        
 
     def testCreateTempStorage(self):
         stemp = Storage()
@@ -120,7 +147,16 @@ class StorageTest(TestCase):
             self.fail()
         except ValueError, e:
             self.assertEquals("Cannot put Storage inside itself.", str(e))
-        
+
+    def testPutStorageInOtherStorage(self):
+        s1 = Storage(join(self._tempdir, 'samedir'))
+        s2 = Storage()
+        s1.put('sub', s2)
+        try:
+            s2.put('subsub', s1)
+            self.fail()
+        except ValueError, e:
+            self.assertEquals("Cannot put Storage inside itself.", str(e))
 
     def testInitialRevision(self):
         s = Storage()
@@ -151,3 +187,39 @@ class StorageTest(TestCase):
         oldrevision, newrevision = sink.close()
         self.assertEquals(1, oldrevision)
         self.assertEquals(1, newrevision)
+
+    def testDeleteFile(self):
+        s = Storage(self._tempdir)
+        s.put('name').close()
+        s.delete('name')
+        # delete also removes versions.
+        oldrev, newrev = s.put('name').close()
+        self.assertEquals(0, oldrev)
+        self.assertEquals(1, newrev)
+
+    def testDeleteStorage(self):
+        s = Storage(self._tempdir)
+        substore = Storage()
+        substore.put('name').close()
+        s.put('sub', substore)
+        s.delete('sub')
+        self.assertFalse(isdir(join(self._tempdir, 'sub')))
+
+    def testDeleteNonExisting(self):
+        try:
+            s = Storage()
+            s.delete('name')
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'name'", str(e))
+
+
+    #TODO
+
+
+    
+    # Probably the following are YAGNI:
+    # move
+    # move over existing ...
+    # move non existing
+    # move to substorage??

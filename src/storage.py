@@ -1,8 +1,8 @@
 
 from os.path import join, isdir
-from os import makedirs, rename, popen3
+from os import makedirs, rename, popen3, remove
 from tempfile import mkdtemp
-from errno import ENAMETOOLONG, EINVAL 
+from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR
 from shutil import rmtree
 from re import compile
 
@@ -48,14 +48,33 @@ class Storage(object):
                 raise KeyError('Name too long: ' + name)
             elif e.errno == EINVAL:
                 raise ValueError('Cannot put Storage inside itself.')
+            elif e.errno in [ENOTDIR, EISDIR]:
+                raise KeyError('Key already exists: ' + name)
             raise
     
     def get(self, name):
         path = join(self._basedir, escapeName(name))
-        if isdir(path):
-            return Storage(path) 
-        return open(path)
-     
+        try:
+            if isdir(path):
+                return Storage(path) 
+            return open(path)
+        except IOError, e:
+            if e.errno == ENOENT:
+                raise KeyError(name)
+            raise
+
+    def delete(self, name):
+        path = join(self._basedir, escapeName(name))
+        try:
+            if isdir(path):
+                rmtree(path)
+            else:
+                remove(path)
+                remove(path + ',v')
+        except OSError, e:
+            if e.errno == ENOENT:
+                raise KeyError(name)
+            raise
 
 responsePattern = compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
 
