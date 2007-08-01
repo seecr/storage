@@ -1,16 +1,21 @@
 
 from os.path import join, isdir
-from os import makedirs, rename, popen3, remove
+from os import makedirs, rename, popen3, remove, listdir
 from tempfile import mkdtemp
 from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR
 from shutil import rmtree
 from re import compile
 
 BAD_CHARS = map(chr, range(32)) + ['/', '%', ',']
+REVERSE_BAD_CHARS = compile('%([0-9A-F]{2})')
+HEX_TO_CHAR = lambda x:chr(int(x.group(1),16))
 BAD_BASH_CHARS = ['!','@','$','&','<','>', '|', '(',')',';', '*', '`', '\'', '"', '\\', ' ']
 
 def escapeName(name):
     return ''.join((char in BAD_CHARS and '%%%02X' % ord(char) or char for char in name))
+
+def unescapeName(name):
+    return REVERSE_BAD_CHARS.sub(HEX_TO_CHAR, name)
 
 def bashEscape(name):
     return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
@@ -75,6 +80,9 @@ class Storage(object):
             if e.errno == ENOENT:
                 raise KeyError(name)
             raise
+
+    def enumerate(self):
+        return (unescapeName(item) for item in listdir(self._basedir) if not item.endswith(',v'))
 
 responsePattern = compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
 

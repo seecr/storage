@@ -213,6 +213,37 @@ class StorageTest(TestCase):
         except KeyError, e:
             self.assertEquals("'name'", str(e))
 
+    def testEnumerateEmptyThing(self):
+        s = Storage(self._tempdir)
+        result = s.enumerate()
+        self.assertEquals([], list(result))
+
+    def testEnumerateOneFile(self):
+        s = Storage(self._tempdir)
+        s.put('name').close()
+        result = s.enumerate()
+        self.assertEquals(['name'], list(result))
+
+    def testEnumerateFilesWithStrangeNames(self):
+        self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
+        self.assertEnumerateName('---------')
+        self.assertEnumerateName('rm -rf /*')
+        self.assertEnumerateName('version,v')
+
+    def assertEnumerateName(self, name):
+        s = Storage()
+        s.put(name).close()
+        result = s.enumerate()
+        self.assertEquals([name], list(result))
+
+    def testEnumerateMultipleNames(self):
+        s = Storage(self._tempdir)
+        s.put('name').close()
+        s.put('name2').close()
+        result = s.enumerate()
+        self.assertEquals(set(['name', 'name2']), set(result))
+
+
 
     #TODO
 
