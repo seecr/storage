@@ -243,12 +243,8 @@ class StorageTest(TestCase):
         result = s.enumerate()
         self.assertEquals(set(['name', 'name2']), set(result))
 
-
-
     #TODO
 
-
-    
     # Probably the following are YAGNI:
     # move
     # move over existing ...
