@@ -83,11 +83,17 @@ class StorageTest(TestCase):
         self.assertEquals('data', s.get('mystore').get('mydata').next())
 
     def testStrangeCharactersInName(self):
+        self.assertName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
+        self.assertName('---------')
+        self.assertName('rm -rf /*')
+        self.assertName('version,v')
+
+    def assertName(self, name):
         s = Storage(self._tempdir)
-        sink = s.put('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
+        sink = s.put(name)
         sink.send('data')
         sink.close()
-        self.assertEquals('data', s.get('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ').next())
+        self.assertEquals('data', s.get(name).next())
 
     def testNameTooLong(self):
         s = Storage()
