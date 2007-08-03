@@ -30,7 +30,7 @@ class Storage(object):
             self._basedir = basedir
             self._own = False
             isdir(self._basedir) or makedirs(self._basedir)
-        self.name = basename(self._basedir)
+        self.name = unescapeName(basename(self._basedir))
 
     def __del__(self):
         if self._own:
@@ -40,7 +40,7 @@ class Storage(object):
         rename(self._basedir, path)
         self._basedir = path
         self._own = False
-        self.name = basename(self._basedir)
+        self.name = unescapeName(basename(self._basedir))
         
     def put(self, name, aStorage = None):
         path = join(self._basedir, escapeName(name))
