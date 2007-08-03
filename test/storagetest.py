@@ -40,16 +40,13 @@ class StorageTest(TestCase):
         sink = s.put('mydata')            
         sink.send('some data of mine')
         sink.close()
+        self.assertTrue('mydata' in s)
         stream = s.get('mydata')
         self.assertEquals('some data of mine', stream.next())
 
     def testGetNotExistingData(self):
         s = Storage(self._tempdir)
-        try:
-            s.get('name')
-            self.fail()
-        except KeyError, e:
-            self.assertEquals("'name'", str(e))
+        self.assertFalse('name' in s)
         
     def testGetAllData(self):
         s = Storage(self._tempdir)
@@ -74,6 +71,15 @@ class StorageTest(TestCase):
         
         self.assertEquals('data', s2.get('s1').get('mydata').next())
         self.assertEquals('data', s1.get('mydata').next())
+
+    def testPutStorageChangesName(self):
+        s1 = Storage(join(self._tempdir, 'basedir1'))
+        s2 = Storage(join(self._tempdir, 'basedir2'))
+        self.assertEquals('basedir1', s1.name)
+        self.assertEquals('basedir2', s2.name)
+        s2.put('s1', s1)
+        self.assertEquals('s1', s1.name)
+        
 
     def testPutStorageAssumesOwnership(self):
         s1 = Storage(join(self._tempdir, 'basedir1'))
@@ -215,14 +221,14 @@ class StorageTest(TestCase):
 
     def testEnumerateEmptyThing(self):
         s = Storage(self._tempdir)
-        result = s.enumerate()
-        self.assertEquals([], list(result))
+        self.assertEquals([], list(s))
 
     def testEnumerateOneFile(self):
         s = Storage(self._tempdir)
         s.put('name').close()
-        result = s.enumerate()
-        self.assertEquals(['name'], list(result))
+        allnames = [item.name for item in s]
+        self.assertEquals(['name'], allnames)
+            
 
     def testEnumerateFilesWithStrangeNames(self):
         self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
@@ -233,15 +239,36 @@ class StorageTest(TestCase):
     def assertEnumerateName(self, name):
         s = Storage()
         s.put(name).close()
-        result = s.enumerate()
-        self.assertEquals([name], list(result))
+        self.assertEquals([name], [item.name for item in s])
 
     def testEnumerateMultipleNames(self):
         s = Storage(self._tempdir)
         s.put('name').close()
         s.put('name2').close()
-        result = s.enumerate()
-        self.assertEquals(set(['name', 'name2']), set(result))
+        allnames = [item.name for item in s]
+        self.assertEquals(set(['name', 'name2']), set(allnames))
+
+    def testEnumerateWithSubstorage(self):
+        s = Storage(self._tempdir)
+        s.put('name').close()
+        sub = Storage()
+        s.put('sub', sub)
+        self.assertEquals(set(['name', 'sub']), set([item.name for item in s]))
+
+
+    def testEnumerationDeliversObjectReadyForWork(self):
+        s = Storage(self._tempdir)
+        sink = s.put('name')
+        sink.send('data')
+        sink.close()
+        allitems = list(s)
+        self.assertEquals(1, len(allitems))
+        item1 = allitems[0]
+        self.assertEquals('name', item1.name)
+        self.assertEquals('data', ''.join(item1))
+
+        
+        
 
     #TODO
 

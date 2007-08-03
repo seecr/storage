@@ -1,5 +1,5 @@
 
-from os.path import join, isdir
+from os.path import join, isdir, basename, isfile
 from os import makedirs, rename, popen3, remove, listdir
 from tempfile import mkdtemp
 from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR
@@ -30,6 +30,7 @@ class Storage(object):
             self._basedir = basedir
             self._own = False
             isdir(self._basedir) or makedirs(self._basedir)
+        self.name = basename(self._basedir)
 
     def __del__(self):
         if self._own:
@@ -39,6 +40,7 @@ class Storage(object):
         rename(self._basedir, path)
         self._basedir = path
         self._own = False
+        self.name = basename(self._basedir)
         
     def put(self, name, aStorage = None):
         path = join(self._basedir, escapeName(name))
@@ -59,14 +61,13 @@ class Storage(object):
     
     def get(self, name):
         path = join(self._basedir, escapeName(name))
-        try:
-            if isdir(path):
-                return Storage(path) 
-            return open(path)
-        except IOError, e:
-            if e.errno == ENOENT:
-                raise KeyError(name)
-            raise
+        if isdir(path):
+            return Storage(path)
+        return File(path)
+
+    def __contains__(self, name):
+        path = join(self._basedir, escapeName(name))
+        return isfile(path) or isdir(path)
 
     def delete(self, name):
         path = join(self._basedir, escapeName(name))
@@ -81,9 +82,11 @@ class Storage(object):
                 raise KeyError(name)
             raise
 
-    def enumerate(self):
-        return (unescapeName(item) for item in listdir(self._basedir) if not item.endswith(',v'))
-
+    def __iter__(self):
+        for item in listdir(self._basedir):
+            if not item.endswith(',v'):
+                yield self.get(unescapeName(item))
+            
 responsePattern = compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
 
 class Sink(object):
@@ -95,6 +98,9 @@ class Sink(object):
     
     def close(self):
         self._close()
+        return self._generateRevision()
+
+    def _generateRevision(self):
         stdin, stdout, stderr = popen3("ci -t-storage -l -mnomesg %s" % bashEscape(self.name))
         response = stderr.read()
         result = responsePattern.match(response).groupdict()
@@ -104,3 +110,20 @@ class Sink(object):
             return int(result['revision1']), int(result['revision1'])
         if result['status'] == 'new':
             return int(result['revision2']), int(result['revision1'])
+
+class File(object):
+    def __init__(self, path):
+        self.path = path
+        self.name = unescapeName(basename(path))
+        self.__file = None
+
+    def _file(self):
+        if self.__file == None:
+            self.__file = open(self.path)
+        return self.__file
+
+    def __getattr__(self, attr):
+        return getattr(self._file(), attr)
+
+    def __iter__(self):
+        return self._file()
