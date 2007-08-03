@@ -231,14 +231,24 @@ class StorageTest(TestCase):
             
 
     def testEnumerateFilesWithStrangeNames(self):
-        self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
-        self.assertEnumerateName('---------')
-        self.assertEnumerateName('rm -rf /*')
-        self.assertEnumerateName('version,v')
+        def create(storage, name):
+            storage.put(name).close()
+        self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ', create)
+        self.assertEnumerateName('---------', create)
+        self.assertEnumerateName('rm -rf /*', create)
+        self.assertEnumerateName('version,v', create)
 
-    def assertEnumerateName(self, name):
+    def testEnumerateStorageWithStrangeNames(self):
+        def create(storage, name):
+            storage.put(name, Storage())
+        self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ', create)
+        self.assertEnumerateName('---------', create)
+        self.assertEnumerateName('rm -rf /*', create)
+        self.assertEnumerateName('version,v', create)
+
+    def assertEnumerateName(self, name, create):
         s = Storage()
-        s.put(name).close()
+        create(s, name)
         self.assertEquals([name], [item.name for item in s])
 
     def testEnumerateMultipleNames(self):
