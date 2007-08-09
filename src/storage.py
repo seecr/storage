@@ -2,11 +2,11 @@
 from os.path import join, isdir, basename, isfile
 from os import makedirs, rename, popen3, remove, listdir
 from tempfile import mkdtemp
-from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR
+from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
 from shutil import rmtree
 from re import compile
 
-BAD_CHARS = map(chr, range(32)) + ['/', '%', ',']
+BAD_CHARS = map(chr, range(32)) + ['/', '%', ',', '.']
 REVERSE_BAD_CHARS = compile('%([0-9A-F]{2})')
 HEX_TO_CHAR = lambda x:chr(int(x.group(1),16))
 BAD_BASH_CHARS = ['!','@','$','&','<','>', '|', '(',')',';', '*', '`', '\'', '"', '\\', ' ']
@@ -42,11 +42,15 @@ class Storage(object):
         self._own = False
         self.name = unescapeName(basename(self._basedir))
         
+
     def put(self, name, aStorage = None):
+        if not name:
+            raise KeyError('Empty name')
         path = join(self._basedir, escapeName(name))
         try:
             if aStorage:
                 aStorage._transferOwnership(path)
+                return aStorage
             else:
                 file = open(path, 'w')
                 return Sink(file)
@@ -55,11 +59,13 @@ class Storage(object):
                 raise KeyError('Name too long: ' + name)
             elif e.errno == EINVAL:
                 raise ValueError('Cannot put Storage inside itself.')
-            elif e.errno in [ENOTDIR, EISDIR]:
+            elif e.errno in [ENOTDIR, EISDIR, ENOTEMPTY]:
                 raise KeyError('Key already exists: ' + name)
             raise
     
     def get(self, name):
+        if not name:
+            raise KeyError('Empty name')
         path = join(self._basedir, escapeName(name))
         if isdir(path):
             return Storage(path)

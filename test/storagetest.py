@@ -67,10 +67,11 @@ class StorageTest(TestCase):
         sink.send('data')
         sink.close()
         
-        s2.put('s1', s1)
+        newStorage = s2.put('s1', s1)
         
         self.assertEquals('data', s2.get('s1').get('mydata').next())
         self.assertEquals('data', s1.get('mydata').next())
+        self.assertEquals('data', newStorage.get('mydata').next())
 
     def testPutStorageChangesName(self):
         s1 = Storage(join(self._tempdir, 'basedir1'))
@@ -105,6 +106,19 @@ class StorageTest(TestCase):
         except KeyError, e:
             self.assertEquals("'Key already exists: name'", str(e))
         
+    def testPutStorageOverEmptyStorage(self):
+        s = Storage(self._tempdir)
+        s.put('name', Storage())
+        s.put('name', Storage())
+    
+    def testPutStorageOverStorageFails(self):
+        s = Storage(self._tempdir)
+        s.put('name', Storage()).put('sub').close()
+        try:
+            s.put('name', Storage())
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'Key already exists: name'", str(e))
 
     def testCreateTempStorage(self):
         stemp = Storage()
@@ -118,7 +132,7 @@ class StorageTest(TestCase):
     def testStrangeCharactersInName(self):
         self.assertName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
         self.assertName('---------')
-        self.assertName('rm -rf /*')
+        self.assertName('sudo rm -rf /*')
         self.assertName('version,v')
 
     def assertName(self, name):
@@ -135,6 +149,22 @@ class StorageTest(TestCase):
             self.fail()
         except KeyError, e:
             self.assertEquals("'Name too long: " + "long" * 200 + "'", str(e))
+
+    def testEmptyName(self):
+        s = Storage()
+        try:
+            s.put('')
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'Empty name'", str(e))
+    
+    def testEmptyNameStorage(self):
+        s = Storage()
+        try:
+            s.put('', Storage())
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'Empty name'", str(e))
 
     def testNameTooLongForStorage(self):
         s = Storage()
@@ -229,22 +259,25 @@ class StorageTest(TestCase):
         allnames = [item.name for item in s]
         self.assertEquals(['name'], allnames)
             
-
     def testEnumerateFilesWithStrangeNames(self):
         def create(storage, name):
             storage.put(name).close()
         self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ', create)
         self.assertEnumerateName('---------', create)
-        self.assertEnumerateName('rm -rf /*', create)
+        self.assertEnumerateName('sudo rm -rf /*', create)
         self.assertEnumerateName('version,v', create)
+        self.assertEnumerateName('..', create)
+        self.assertEnumerateName('.', create)
 
     def testEnumerateStorageWithStrangeNames(self):
         def create(storage, name):
             storage.put(name, Storage())
         self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ', create)
         self.assertEnumerateName('---------', create)
-        self.assertEnumerateName('rm -rf /*', create)
+        self.assertEnumerateName('sudo rm -rf /*', create)
         self.assertEnumerateName('version,v', create)
+        self.assertEnumerateName('..', create)
+        self.assertEnumerateName('.', create)
 
     def assertEnumerateName(self, name, create):
         s = Storage()
