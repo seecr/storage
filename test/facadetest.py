@@ -83,13 +83,17 @@ class FacadeTest(TestCase):
             self.assertEquals("Name 'one..two' not allowed.", str(e))
 
     def testGetNonExisting(self):
+        self.assertGetNameError('name')
+        self.assertGetNameError('name.name')
+        
+    def assertGetNameError(self, name):
         s = Storage(self._tempdir)
-        f = Facade(s)
+        f = Facade(s, split = lambda x:x.split('.'))
         try:
-            sink = f.get('name')
+            sink = f.get(name)
             self.fail()
         except FacadeError, e:
-            self.assertEquals("Name 'name' does not exist.", str(e))
+            self.assertEquals("Name '%s' does not exist." % name, str(e))
         
 
     # TODO

@@ -8,6 +8,8 @@ def catchError(aMethod):
             return aMethod(self, name)
         except KeyError, e:
             raise FacadeError("Name '%s' not allowed." % name)
+        except IOError, e:
+            raise FacadeError("Name '%s' does not exist." % name)
     return wrapper
 
 class Facade:
@@ -33,7 +35,7 @@ class Facade:
         for storeName in splitted[:-1]:
             store = store.get(storeName)
         result = store.get(splitted[-1])
-        if not isfile(result.path): raise FacadeError("Name '%s' does not exist." % name)
+        result.mode #side-effects, if not file, raise IOError
         return result
 
 
