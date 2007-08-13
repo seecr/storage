@@ -1,4 +1,4 @@
 
 
 from storage import Storage
-from facade import Facade, FacadeError
+from hierarchicalstorage import HierarchicalStorage, HierarchicalStorageError

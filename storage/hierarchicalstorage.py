@@ -7,7 +7,7 @@ def catchPutError(aMethod):
         try:
             return aMethod(self, name)
         except KeyError, e:
-            raise FacadeError("Name '%s' not allowed." % name)
+            raise HierarchicalStorageError("Name '%s' not allowed." % name)
     return wrapper
 
 def catchGetError(aMethod):
@@ -15,7 +15,7 @@ def catchGetError(aMethod):
         try:
             return aMethod(self, name)
         except KeyError, e:
-            raise FacadeError("Name '%s' does not exist." % name)
+            raise HierarchicalStorageError("Name '%s' does not exist." % name)
     return wrapper
 
 class HierarchicalStorage:

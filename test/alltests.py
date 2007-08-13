@@ -6,7 +6,7 @@ path.insert(0, '..')
 system('rm -rf ../storage/*.pyc *.pyc')
 
 from storagetest import StorageTest
-from facadetest import FacadeTest
+from hierarchicalstoragetest import HierarchicalStorageTest
 
 from unittest import main
 
