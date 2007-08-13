@@ -69,7 +69,9 @@ class Storage(object):
         path = join(self._basedir, escapeName(name))
         if isdir(path):
             return Storage(path)
-        return File(path)
+        elif isfile(path):
+            return File(path)
+        raise KeyError(name)
 
     def __contains__(self, name):
         path = join(self._basedir, escapeName(name))

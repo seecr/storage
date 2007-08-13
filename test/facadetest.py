@@ -57,11 +57,14 @@ class FacadeTest(TestCase):
     def testPutOverAnExistingStorage(self):
         s = Storage(self._tempdir)
         f = Facade(s, split=lambda x:x.split('.'))
-        f.put('one.three').close()
-        sink = f.put('one.two')
-        sink.send('data')
+        sink = f.put('one.three')
+        sink.send('data3')
         sink.close()
-        self.assertEquals('data', f.get('one.two').next())
+        sink = f.put('one.two')
+        sink.send('data2')
+        sink.close()
+        self.assertEquals('data2', f.get('one.two').next())
+        self.assertEquals('data3', f.get('one.three').next())
 
     def testPutWithProblemSplit(self):
         s = Storage(self._tempdir)
@@ -80,7 +83,7 @@ class FacadeTest(TestCase):
             sink = f.get('one..two')
             self.fail()
         except FacadeError, e:
-            self.assertEquals("Name 'one..two' not allowed.", str(e))
+            self.assertEquals("Name 'one..two' does not exist.", str(e))
 
     def testGetNonExisting(self):
         self.assertGetNameError('name')
@@ -94,9 +97,28 @@ class FacadeTest(TestCase):
             self.fail()
         except FacadeError, e:
             self.assertEquals("Name '%s' does not exist." % name, str(e))
+
+    def testExists(self):
+        s = Storage(self._tempdir)
+        f = Facade(s)
+        f.put('othername').close()
+        self.assertFalse('name' in f)
+        self.assertTrue('othername' in f)
         
+    def testExistsWithSplittingUp(self):
+        s = Storage(self._tempdir)
+        f = Facade(s, split = lambda x: x.split('.'))
+        s.put('one', Storage()).put('two').close()
+        self.assertFalse('sub.one' in f)
+        self.assertFalse('one.one' in f)
+        self.assertTrue('one.two' in f)
+
 
     # TODO
+    # get with a Storage ????
+
+    # assert bij Aanmaken Facade dat string == join(split(string)) lijst = split(join(lijst))
+    # waarschijnlijk niet gewenst, omdat testdata niet geschikt kan zijn.
     #
     # - put('one') where 'one' is a storage
     # - exists

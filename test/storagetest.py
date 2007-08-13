@@ -47,6 +47,11 @@ class StorageTest(TestCase):
     def testGetNotExistingData(self):
         s = Storage(self._tempdir)
         self.assertFalse('name' in s)
+        try:
+            s.get('name')
+            self.fail()
+        except KeyError, k:
+            self.assertEquals("'name'", str(k))
         
     def testGetAllData(self):
         s = Storage(self._tempdir)
