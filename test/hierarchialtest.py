@@ -4,9 +4,9 @@ from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import isdir
 
-from storage import Facade, Storage, FacadeError
+from storage import HierarchicalStorage, Storage, HierarchicalStorageError
 
-class FacadeTest(TestCase):
+class HierarchicalStorageTest(TestCase):
     def setUp(self):
         self._tempdir = mkdtemp()
     
@@ -15,14 +15,14 @@ class FacadeTest(TestCase):
 
     def testPut(self):
         s = Storage(self._tempdir)
-        f = Facade(s)
+        f = HierarchicalStorage(s)
         sink = f.put('name')
         sink.send('somedata')
         sink.close()
         self.assertEquals('somedata', s.get('name').next())
 
     def testPutStorageNotAllowed(self):
-        f = Facade(Storage(self._tempdir))
+        f = HierarchicalStorage(Storage(self._tempdir))
         try:
             f.put('sub', Storage())
             self.fail()
@@ -35,12 +35,12 @@ class FacadeTest(TestCase):
         sink.send('somedata')
         sink.close()
         
-        f = Facade(s)
+        f = HierarchicalStorage(s)
         self.assertEquals('somedata', f.get('name').next())
 
     def testPutWithSplitMethod(self):
         s = Storage(self._tempdir)
-        f = Facade(s, split=lambda x:x.split('.'))
+        f = HierarchicalStorage(s, split=lambda x:x.split('.'))
         sink = f.put('one.two.three')
         sink.send('data')
         sink.close()
@@ -51,12 +51,12 @@ class FacadeTest(TestCase):
         sink = s.put('one', Storage()).put('two', Storage()).put('three')
         sink.send('data')
         sink.close()
-        f = Facade(s, split=lambda x:x.split('.'))
+        f = HierarchicalStorage(s, split=lambda x:x.split('.'))
         self.assertEquals('data', f.get('one.two.three').next())
 
     def testPutOverAnExistingStorage(self):
         s = Storage(self._tempdir)
-        f = Facade(s, split=lambda x:x.split('.'))
+        f = HierarchicalStorage(s, split=lambda x:x.split('.'))
         sink = f.put('one.three')
         sink.send('data3')
         sink.close()
@@ -68,21 +68,21 @@ class FacadeTest(TestCase):
 
     def testPutWithProblemSplit(self):
         s = Storage(self._tempdir)
-        f = Facade(s, split=lambda x:('first','','second'))
+        f = HierarchicalStorage(s, split=lambda x:('first','','second'))
         try:
             sink = f.put('one..two')
             self.fail()
-        except FacadeError, e:
+        except HierarchicalStorageError, e:
             self.assertEquals("Name 'one..two' not allowed.", str(e))
         
     def testGetWithProblemSplit(self):
         s = Storage(self._tempdir)
         s.put('first', Storage()).put('second').close()
-        f = Facade(s, split=lambda x:('first','','second'))
+        f = HierarchicalStorage(s, split=lambda x:('first','','second'))
         try:
             sink = f.get('one..two')
             self.fail()
-        except FacadeError, e:
+        except HierarchicalStorageError, e:
             self.assertEquals("Name 'one..two' does not exist.", str(e))
 
     def testGetNonExisting(self):
@@ -91,23 +91,23 @@ class FacadeTest(TestCase):
         
     def assertGetNameError(self, name):
         s = Storage(self._tempdir)
-        f = Facade(s, split = lambda x:x.split('.'))
+        f = HierarchicalStorage(s, split = lambda x:x.split('.'))
         try:
             sink = f.get(name)
             self.fail()
-        except FacadeError, e:
+        except HierarchicalStorageError, e:
             self.assertEquals("Name '%s' does not exist." % name, str(e))
 
     def testExists(self):
         s = Storage(self._tempdir)
-        f = Facade(s)
+        f = HierarchicalStorage(s)
         f.put('othername').close()
         self.assertFalse('name' in f)
         self.assertTrue('othername' in f)
         
     def testExistsWithSplittingUp(self):
         s = Storage(self._tempdir)
-        f = Facade(s, split = lambda x: x.split('.'))
+        f = HierarchicalStorage(s, split = lambda x: x.split('.'))
         s.put('one', Storage()).put('two').close()
         self.assertFalse('sub.one' in f)
         self.assertFalse('one.one' in f)
@@ -117,7 +117,7 @@ class FacadeTest(TestCase):
     # TODO
     # get with a Storage ????
 
-    # assert bij Aanmaken Facade dat string == join(split(string)) lijst = split(join(lijst))
+    # assert bij Aanmaken HierarchicalStorage dat string == join(split(string)) lijst = split(join(lijst))
     # waarschijnlijk niet gewenst, omdat testdata niet geschikt kan zijn.
     #
     # - put('one') where 'one' is a storage

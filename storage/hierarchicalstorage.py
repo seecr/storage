@@ -18,7 +18,7 @@ def catchGetError(aMethod):
             raise FacadeError("Name '%s' does not exist." % name)
     return wrapper
 
-class Facade:
+class HierarchicalStorage:
     def __init__(self, storage, split = lambda x:(x,)):
         self._storage = storage
         self._split = split
@@ -54,5 +54,5 @@ class Facade:
         return splitted[-1] in store
 
 
-class FacadeError(Exception):
+class HierarchicalStorageError(Exception):
     pass
