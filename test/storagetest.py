@@ -303,7 +303,6 @@ class StorageTest(TestCase):
         s.put('sub', sub)
         self.assertEquals(set(['name', 'sub']), set([item.name for item in s]))
 
-
     def testEnumerationDeliversObjectReadyForWork(self):
         s = Storage(self._tempdir)
         sink = s.put('name')
@@ -315,6 +314,11 @@ class StorageTest(TestCase):
         self.assertEquals('name', item1.name)
         self.assertEquals('data', ''.join(item1))
 
+    def testNiceNames(self):
+        s = Storage(self._tempdir)
+        s.put('name.xml').close()
+        self.assertTrue(isfile(join(self._tempdir, 'name.xml')))
+        
         
         
 
