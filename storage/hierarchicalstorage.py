@@ -10,7 +10,7 @@ def catchPutError(aMethod):
             raise HierarchicalStorageError("Name '%s' not allowed." % name)
     return wrapper
 
-def catchGetError(aMethod):
+def catchDoesNotExistError(aMethod):
     def wrapper(self, name):
         try:
             return aMethod(self, name)
@@ -29,12 +29,12 @@ class HierarchicalStorage:
         storeHere = self._storage
         for storeName in splitted[:-1]:
             try:
-                storeHere = storeHere.put(storeName, Storage())
-            except KeyError:
                 storeHere = storeHere.get(storeName)
+            except KeyError:
+                storeHere = storeHere.put(storeName, Storage())
         return storeHere.put(splitted[-1])
 
-    @catchGetError
+    @catchDoesNotExistError
     def get(self, name):
         splitted = self._split(name)
         store = self._storage
@@ -42,6 +42,14 @@ class HierarchicalStorage:
             store = store.get(storeName)
         result = store.get(splitted[-1])
         return result
+
+    @catchDoesNotExistError
+    def delete(self, name):
+        splitted = self._split(name)
+        store = self._storage
+        for storeName in splitted[:-1]:
+            store = store.get(storeName)
+        store.delete(splitted[-1])
 
     def __contains__(self, name):
         splitted = self._split(name)

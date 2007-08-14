@@ -113,6 +113,30 @@ class HierarchicalStorageTest(TestCase):
         self.assertFalse('one.one' in f)
         self.assertTrue('one.two' in f)
 
+    def testDeleteFile(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s)
+        f.put('name').close()
+        self.assertTrue('name' in f)
+        f.delete('name')
+        self.assertFalse('name' in f)
+
+    def testDeleteSplittedFile(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s, split= lambda x: x)
+        f.put(('sub','name')).close()
+        self.assertTrue(('sub','name') in f)
+        f.delete(('sub','name'))
+        self.assertFalse(('sub','name') in f)
+
+    def testDeleteNonExisting(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s)
+        try:
+            f.delete('not here')
+            self.fail()
+        except HierarchicalStorageError, e:
+            self.assertEquals("Name 'not here' does not exist.", str(e))
 
     # TODO
     # get with a Storage ????
