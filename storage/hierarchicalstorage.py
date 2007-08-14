@@ -2,22 +2,17 @@
 from storage import Storage
 from os.path import isfile
 
-def catchPutError(aMethod):
+def catchKeyError(message, aMethod):
     def wrapper(self, name):
         try:
             return aMethod(self, name)
         except KeyError, e:
-            raise HierarchicalStorageError("Name '%s' not allowed." % name)
+            raise HierarchicalStorageError(message % name)
     return wrapper
 
-def catchDoesNotExistError(aMethod):
-    def wrapper(self, name):
-        try:
-            return aMethod(self, name)
-        except KeyError, e:
-            raise HierarchicalStorageError("Name '%s' does not exist." % name)
-    return wrapper
-
+catchPutError = lambda aMethod: catchKeyError("Name '%s' not allowed.", aMethod)
+catchDoesNotExistError = lambda aMethod: catchKeyError("Name '%s' does not exist.", aMethod)
+    
 class HierarchicalStorage:
     def __init__(self, storage, split = lambda x:(x,)):
         self._storage = storage
