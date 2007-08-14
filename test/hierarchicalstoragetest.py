@@ -129,6 +129,15 @@ class HierarchicalStorageTest(TestCase):
         f.delete(('sub','name'))
         self.assertFalse(('sub','name') in f)
 
+    def testNonStringNamesShowUpCorrectInError(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s, split = lambda x: x)
+        try:
+            f.get(('sub','name'))
+            self.fail()
+        except HierarchicalStorageError, e:
+            self.assertEquals("Name '('sub', 'name')' does not exist.", str(e))
+    
     def testDeleteNonExisting(self):
         s = Storage(self._tempdir)
         f = HierarchicalStorage(s)
@@ -137,6 +146,8 @@ class HierarchicalStorageTest(TestCase):
             self.fail()
         except HierarchicalStorageError, e:
             self.assertEquals("Name 'not here' does not exist.", str(e))
+
+        
 
     # TODO
     # get with a Storage ????

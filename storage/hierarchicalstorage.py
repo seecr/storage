@@ -7,7 +7,7 @@ def catchKeyError(message, aMethod):
         try:
             return aMethod(self, name)
         except KeyError, e:
-            raise HierarchicalStorageError(message % name)
+            raise HierarchicalStorageError(message % str(name))
     return wrapper
 
 catchPutError = lambda aMethod: catchKeyError("Name '%s' not allowed.", aMethod)
