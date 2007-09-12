@@ -2,7 +2,7 @@
 #
 #    Storage stores data in a reliable, extendable filebased storage
 #    with great performance.
-#    Copyright (C) 2006 Seek You Too B.V. (CQ2) http://www.cq2.nl
+#    Copyright (C) 2006-2007 Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 #    This file is part of Storage.
 #
