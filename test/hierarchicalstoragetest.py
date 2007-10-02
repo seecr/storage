@@ -32,7 +32,7 @@ from storage import HierarchicalStorage, Storage, HierarchicalStorageError
 class HierarchicalStorageTest(TestCase):
     def setUp(self):
         self._tempdir = mkdtemp()
-    
+
     def tearDown(self):
         isdir(self._tempdir) and rmtree(self._tempdir)
 
@@ -57,7 +57,7 @@ class HierarchicalStorageTest(TestCase):
         sink = s.put('name')
         sink.send('somedata')
         sink.close()
-        
+
         f = HierarchicalStorage(s)
         self.assertEquals('somedata', f.get('name').next())
 
@@ -97,7 +97,7 @@ class HierarchicalStorageTest(TestCase):
             self.fail()
         except HierarchicalStorageError, e:
             self.assertEquals("Name 'one..two' not allowed.", str(e))
-        
+
     def testGetWithProblemSplit(self):
         s = Storage(self._tempdir)
         s.put('first', Storage()).put('second').close()
@@ -111,7 +111,7 @@ class HierarchicalStorageTest(TestCase):
     def testGetNonExisting(self):
         self.assertGetNameError('name')
         self.assertGetNameError('name.name')
-        
+
     def assertGetNameError(self, name):
         s = Storage(self._tempdir)
         f = HierarchicalStorage(s, split = lambda x:x.split('.'))
@@ -127,7 +127,7 @@ class HierarchicalStorageTest(TestCase):
         f.put('othername').close()
         self.assertFalse('name' in f)
         self.assertTrue('othername' in f)
-        
+
     def testExistsWithSplittingUp(self):
         s = Storage(self._tempdir)
         f = HierarchicalStorage(s, split = lambda x: x.split('.'))
@@ -160,7 +160,7 @@ class HierarchicalStorageTest(TestCase):
             self.fail()
         except HierarchicalStorageError, e:
             self.assertEquals("Name '('sub', 'name')' does not exist.", str(e))
-    
+
     def testDeleteNonExisting(self):
         s = Storage(self._tempdir)
         f = HierarchicalStorage(s)
@@ -170,7 +170,23 @@ class HierarchicalStorageTest(TestCase):
         except HierarchicalStorageError, e:
             self.assertEquals("Name 'not here' does not exist.", str(e))
 
-        
+    def testIter(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s)
+        f.put('some.name.0').close()
+        f.put('some.name.1').close()
+        l = list(f)
+        self.assertEquals(['some.name.0', 'some.name.1'], l)
+
+    def testIterWithSplit(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s, split=lambda s: s.split('.'), join=lambda l: ".".join(l))
+        f.put('something').close()
+        f.put('left.right').close()
+        f.put('left.middle.right').close()
+        l = list(f)
+        self.assertEquals(['something', 'left.right', 'left.middle.right'], l)
+
 
     # TODO
     # get with a Storage ????

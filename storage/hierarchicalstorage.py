@@ -22,8 +22,9 @@
 #
 ## end license ##
 
-from storage import Storage
-from os.path import isfile
+from storage import Storage, File
+from os.path import isfile, abspath
+from os import walk, sep
 
 def catchKeyError(message, aMethod):
     def wrapper(self, name):
@@ -35,11 +36,12 @@ def catchKeyError(message, aMethod):
 
 catchPutError = lambda aMethod: catchKeyError("Name '%s' not allowed.", aMethod)
 catchDoesNotExistError = lambda aMethod: catchKeyError("Name '%s' does not exist.", aMethod)
-    
+
 class HierarchicalStorage:
-    def __init__(self, storage, split = lambda x:(x,)):
+    def __init__(self, storage, split = lambda x:(x,), join=lambda x:''.join(x)):
         self._storage = storage
         self._split = split
+        self._join = join
 
     @catchPutError
     def put(self, name):
@@ -79,6 +81,19 @@ class HierarchicalStorage:
             return False
         return splitted[-1] in store
 
+    def __iter__(self):
+        SKIP_BASENAME = 1
+        for item in self.allFilenamesIn(self._storage):
+            yield self._join(item[SKIP_BASENAME:])
+
+    def allFilenamesIn(self, storageOrFile):
+        if type(storageOrFile) == File:
+            yield [storageOrFile.name]
+        else:
+            aStorage = storageOrFile
+            for storageOrFile in aStorage:
+                for fileName in self.allFilenamesIn(storageOrFile):
+                    yield [aStorage.name] + fileName
 
 class HierarchicalStorageError(Exception):
     pass
