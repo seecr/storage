@@ -176,7 +176,7 @@ class HierarchicalStorageTest(TestCase):
         f.put('some.name.0').close()
         f.put('some.name.1').close()
         l = list(f)
-        self.assertEquals(['some.name.0', 'some.name.1'], l)
+        self.assertEquals(set(['some.name.0', 'some.name.1']), set(l))
 
     def testIterWithSplit(self):
         s = Storage(self._tempdir)
@@ -185,7 +185,7 @@ class HierarchicalStorageTest(TestCase):
         f.put('left.right').close()
         f.put('left.middle.right').close()
         l = list(f)
-        self.assertEquals(['something', 'left.right', 'left.middle.right'], l)
+        self.assertEquals(set(['something', 'left.right', 'left.middle.right']), set(l))
 
 
     # TODO
