@@ -26,4 +26,12 @@ from distutils.core import setup
 setup(
     name='storage',
     packages=['storage'],
+    version='%VERSION%',
+    url='http://www.cq2.nl/plainview/storage.page',
+    author='Seek You Too',
+    author_email='info@cq2.nl',
+    description='Storage stores data in a reliable, extendable filebased storage with great performance.',
+    long_description='Storage stores data in a reliable, extendable filebased storage with great performance.',
+    license='GNU Public License',
+    platforms='all',
 )
