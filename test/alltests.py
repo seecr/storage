@@ -22,16 +22,20 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 ## end license ##
+import os, sys
+os.system('find .. -name "*.pyc" | xargs rm -f')
 
-from sys import path
-from os import system
-path.insert(0, '..')
-system('rm -rf ../storage/*.pyc *.pyc')
+from glob import glob
+for path in glob('../deps.d/*'):
+    sys.path.insert(0, path)
+
+if os.environ.get('PYTHONPATH', '') == '':
+    sys.path.insert(0, "..")
+
+from unittest import main
 
 from storagetest import StorageTest
 from hierarchicalstoragetest import HierarchicalStorageTest
-
-from unittest import main
 
 if __name__ == '__main__':
     main()

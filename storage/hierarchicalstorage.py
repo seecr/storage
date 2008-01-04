@@ -23,6 +23,7 @@
 ## end license ##
 
 from storage import Storage, File
+from meresco.components.statistics import Logger
 from os.path import isfile, abspath
 from os import walk, sep
 
@@ -37,8 +38,9 @@ def catchKeyError(message, aMethod):
 catchPutError = lambda aMethod: catchKeyError("Name '%s' not allowed.", aMethod)
 catchDoesNotExistError = lambda aMethod: catchKeyError("Name '%s' does not exist.", aMethod)
 
-class HierarchicalStorage:
+class HierarchicalStorage(Logger):
     def __init__(self, storage, split = lambda x:(x,), join=lambda x:''.join(x)):
+        Logger.__init__(self)
         self._storage = storage
         self._split = split
         self._join = join
@@ -57,10 +59,11 @@ class HierarchicalStorage:
     @catchDoesNotExistError
     def get(self, name):
         splitted = self._split(name)
-        store = self._storage
-        for storeName in splitted[:-1]:
-            store = store.get(storeName)
-        result = store.get(splitted[-1])
+        result = self._storage
+        for storeName in splitted:
+            result = result.get(storeName)
+        for i in xrange(1, len(splitted)):
+            self.log(record=self._join(splitted[:i]))
         return result
 
     @catchDoesNotExistError
