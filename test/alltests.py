@@ -29,8 +29,7 @@ from glob import glob
 for path in glob('../deps.d/*'):
     sys.path.insert(0, path)
 
-if os.environ.get('PYTHONPATH', '') == '':
-    sys.path.insert(0, "..")
+sys.path.insert(0, "..")
 
 from unittest import main
 
