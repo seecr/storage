@@ -222,8 +222,13 @@ class StorageTest(TestCase):
         except ValueError, e:
             self.assertEquals("Cannot put Storage inside itself.", str(e))
 
-    def testInitialRevision(self):
+    def testDefaultsToNoRevisionControl(self):
         s = Storage()
+        result = s.put('name').close()
+        self.assertEquals(None, result)
+        
+    def testInitialRevision(self):
+        s = Storage(revisionControl=True)
         sink = s.put('name')
         sink.send('data')
         oldrevision, newrevision = sink.close()
@@ -231,7 +236,7 @@ class StorageTest(TestCase):
         self.assertEquals(1, newrevision)
 
     def testNewRevision(self):
-        s = Storage()
+        s = Storage(revisionControl=True)
         sink = s.put('name')
         sink.send('data')
         sink.close()
@@ -242,7 +247,7 @@ class StorageTest(TestCase):
         self.assertEquals(2, newrevision)
 
     def testSameRevision(self):
-        s = Storage()
+        s = Storage(revisionControl=True)
         sink = s.put('name')
         sink.send('data')
         sink.close()
@@ -252,8 +257,19 @@ class StorageTest(TestCase):
         self.assertEquals(1, oldrevision)
         self.assertEquals(1, newrevision)
 
+    def testRevisionFlagPassedDown(self):
+        s1 = Storage(self._tempdir, revisionControl=True)
+        s2 = Storage()
+        s1.put('sub', s2)
+        revisions = s2.put('name').close()
+        self.assertEquals((0,1), revisions)
+        s = Storage(self._tempdir, revisionControl=True)
+        revisions = s.get('sub').put('other').close()
+        self.assertEquals((0,1), revisions)
+        
+
     def testDeleteFile(self):
-        s = Storage(self._tempdir)
+        s = Storage(self._tempdir, revisionControl=True)
         s.put('name').close()
         s.delete('name')
         # delete also removes versions.
@@ -262,7 +278,7 @@ class StorageTest(TestCase):
         self.assertEquals(1, newrev)
 
     def testDeleteStorage(self):
-        s = Storage(self._tempdir)
+        s = Storage(self._tempdir, revisionControl=True)
         substore = Storage()
         substore.put('name').close()
         s.put('sub', substore)
@@ -278,7 +294,7 @@ class StorageTest(TestCase):
             self.assertEquals("'name'", str(e))
 
     def testEnumerateEmptyThing(self):
-        s = Storage(self._tempdir)
+        s = Storage(self._tempdir, )
         self.assertEquals([], list(s))
 
     def testEnumerateOneFile(self):

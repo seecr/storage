@@ -49,7 +49,7 @@ def bashEscape(name):
         
 
 class Storage(object):
-    def __init__(self, basedir = None):
+    def __init__(self, basedir=None, revisionControl=False):
         if not basedir:
             self._basedir = mkdtemp()
             self._own = True
@@ -57,6 +57,7 @@ class Storage(object):
             self._basedir = basedir
             self._own = False
             isdir(self._basedir) or makedirs(self._basedir)
+        self._revisionControl = revisionControl
         self.name = unescapeName(basename(self._basedir))
 
     def __del__(self):
@@ -77,10 +78,11 @@ class Storage(object):
         try:
             if aStorage:
                 aStorage._transferOwnership(path)
+                aStorage._revisionControl = self._revisionControl
                 return aStorage
             else:
                 file = open(path, 'w')
-                return Sink(file)
+                return Sink(file, self._revisionControl)
         except (OSError,IOError), e:
             if e.errno == ENAMETOOLONG:
                 raise KeyError('Name too long: ' + name)
@@ -95,7 +97,7 @@ class Storage(object):
             raise KeyError('Empty name')
         path = join(self._basedir, escapeName(name))
         if isdir(path):
-            return Storage(path)
+            return Storage(path, revisionControl=self._revisionControl)
         elif isfile(path):
             return File(path)
         raise KeyError(name)
@@ -111,7 +113,7 @@ class Storage(object):
                 rmtree(path)
             else:
                 remove(path)
-                remove(path + ',v')
+                self._revisionControl and remove(path + ',v')
         except OSError, e:
             if e.errno == ENOENT:
                 raise KeyError(name)
@@ -125,15 +127,17 @@ class Storage(object):
 responsePattern = compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
 
 class Sink(object):
-    def __init__(self, file):
+    def __init__(self, file, revisionControl):
         self.send = file.write
         self.name = file.name
         self.fileno = file.fileno
         self._close = file.close
+        self._revisionControl = revisionControl
     
     def close(self):
         self._close()
-        return self._generateRevision()
+        if self._revisionControl:
+            return self._generateRevision()
 
     def _generateRevision(self):
         stdin, stdout, stderr = popen3("ci -t-storage -l -mnomesg %s" % bashEscape(self.name))
