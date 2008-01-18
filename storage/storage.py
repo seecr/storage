@@ -46,7 +46,7 @@ def unescapeName(name):
 
 def bashEscape(name):
     return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
-        
+
 
 class Storage(object):
     def __init__(self, basedir=None, revisionControl=False):
@@ -63,13 +63,13 @@ class Storage(object):
     def __del__(self):
         if self._own:
             rmtree(self._basedir)
-        
+
     def _transferOwnership(self, path):
         rename(self._basedir, path)
         self._basedir = path
         self._own = False
         self.name = unescapeName(basename(self._basedir))
-        
+
 
     def put(self, name, aStorage = None):
         if not name:
@@ -91,7 +91,7 @@ class Storage(object):
             elif e.errno in [ENOTDIR, EISDIR, ENOTEMPTY]:
                 raise KeyError('Key already exists: ' + name)
             raise
-    
+
     def get(self, name):
         if not name:
             raise KeyError('Empty name')
@@ -123,7 +123,7 @@ class Storage(object):
         for item in listdir(self._basedir):
             if not item.endswith(',v'):
                 yield self.get(unescapeName(item))
-            
+
 responsePattern = compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
 
 class Sink(object):
@@ -133,7 +133,7 @@ class Sink(object):
         self.fileno = file.fileno
         self._close = file.close
         self._revisionControl = revisionControl
-    
+
     def close(self):
         self._close()
         if self._revisionControl:
@@ -165,4 +165,8 @@ class File(object):
         return getattr(self._file(), attr)
 
     def __iter__(self):
-        return self._file()
+        f = self._file()
+        x = f.read(4096)
+        while x:
+            yield x
+            x = f.read(4096)
