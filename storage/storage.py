@@ -24,11 +24,12 @@
 
 from os.path import join, isdir, basename, isfile
 from os import makedirs, rename, popen3, remove, listdir
-from tempfile import mkdtemp
+from tempfile import mkdtemp, gettempdir
 from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
 from shutil import rmtree
 from re import compile
 
+defaultTempdir = gettempdir()
 BAD_CHARS = map(chr, range(32)) + ['/', '%', ',']
 FIND_BAD_CHARS = compile('(^\.|' + '|'.join(BAD_CHARS)+')')
 CHAR_TO_HEX = lambda x: '%%%02X' % ord(x.group(1))
@@ -49,9 +50,9 @@ def bashEscape(name):
 
 
 class Storage(object):
-    def __init__(self, basedir=None, revisionControl=False):
+    def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir):
         if not basedir:
-            self._basedir = mkdtemp()
+            self._basedir = mkdtemp(prefix = '.', dir=tempdir)
             self._own = True
         else:
             self._basedir = basedir
@@ -63,6 +64,9 @@ class Storage(object):
     def __del__(self):
         if self._own:
             rmtree(self._basedir)
+
+    def newStorage(self):
+        return Storage(tempdir = self._basedir)
 
     def _transferOwnership(self, path):
         rename(self._basedir, path)

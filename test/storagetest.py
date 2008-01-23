@@ -30,6 +30,7 @@ from storage import Storage
 from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import join, isdir, isfile
+from os import getcwd
 
 class StorageTest(TestCase):
     def setUp(self):
@@ -358,7 +359,13 @@ class StorageTest(TestCase):
         s.put('name.xml').close()
         self.assertTrue(isfile(join(self._tempdir, 'name.xml')))
         
-        
+    def testMoveOverDevicesFails(self):
+        mydir = join(getcwd(), 'justForOneTest')
+        try:
+            s = Storage(mydir)
+            s.put('test', s.newStorage())
+        finally:
+            rmtree(mydir)
         
 
     #TODO

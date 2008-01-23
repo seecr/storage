@@ -25,7 +25,8 @@
 from unittest import TestCase
 from tempfile import mkdtemp
 from shutil import rmtree
-from os.path import isdir
+from os.path import isdir, join
+from os import getcwd
 
 from storage import HierarchicalStorage, Storage, HierarchicalStorageError
 
@@ -186,6 +187,16 @@ class HierarchicalStorageTest(TestCase):
         f.put('left.middle.right').close()
         l = list(f)
         self.assertEquals(set(['something', 'left.right', 'left.middle.right']), set(l))
+
+    def testBasePathOnDifferentDeviceThenTmp(self):
+        mydir = join(getcwd(), 'justForOneTest')
+        try:
+            s = Storage(mydir)
+            f = HierarchicalStorage(s, split=lambda x:x)
+            f.put(('sub','dir','here')).close()
+        finally:
+            rmtree(mydir)
+
 
 
     # TODO

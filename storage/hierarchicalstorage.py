@@ -22,7 +22,7 @@
 #
 ## end license ##
 
-from storage import Storage, File
+from storage import File
 from os.path import isfile, abspath
 from os import walk, sep
 
@@ -51,7 +51,7 @@ class HierarchicalStorage(object):
             try:
                 storeHere = storeHere.get(storeName)
             except KeyError:
-                storeHere = storeHere.put(storeName, Storage())
+                storeHere = storeHere.put(storeName, self._storage.newStorage())
         return storeHere.put(splitted[-1])
 
     @catchDoesNotExistError
