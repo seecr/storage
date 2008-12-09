@@ -28,6 +28,7 @@ from tempfile import mkdtemp, gettempdir
 from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
 from shutil import rmtree
 from re import compile
+from random import choice
 
 defaultTempdir = gettempdir()
 BAD_CHARS = map(chr, range(32)) + ['/', '%', ',']
@@ -39,6 +40,8 @@ REVERSE_BAD_CHARS = compile('%([0-9A-F]{2})')
 
 BAD_BASH_CHARS = ['!','@','$','&','<','>', '|', '(',')',';', '*', '`', '\'', '"', '\\', ' ']
 
+CHARS_FOR_RANDOM = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890'
+
 def escapeName(name):
     return FIND_BAD_CHARS.sub(CHAR_TO_HEX, name)
 
@@ -48,11 +51,10 @@ def unescapeName(name):
 def bashEscape(name):
     return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
 
-
 class Storage(object):
     def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir):
         if not basedir:
-            self._basedir = mkdtemp(prefix = '.', dir=tempdir)
+            self._basedir = self._createRandomDirectory(tempdir=tempdir)
             self._own = True
         else:
             self._basedir = basedir
@@ -65,6 +67,12 @@ class Storage(object):
         if self._own:
             rmtree(self._basedir)
 
+    def _createRandomDirectory(self, tempdir=defaultTempdir):
+        randomName = '.' + ''.join([choice(CHARS_FOR_RANDOM) for i in range(0,6)])
+        fullname = join(tempdir, randomName)
+        makedirs(fullname)
+        return fullname
+
     def newStorage(self):
         return Storage(tempdir = self._basedir)
 
@@ -73,7 +81,6 @@ class Storage(object):
         self._basedir = path
         self._own = False
         self.name = unescapeName(basename(self._basedir))
-
 
     def put(self, name, aStorage = None):
         if not name:
