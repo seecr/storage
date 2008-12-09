@@ -30,12 +30,14 @@ from storage import Storage
 from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import join, isdir, isfile
-from os import getcwd
+from os import getcwd, listdir, stat
+
+from stat import ST_MODE, S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IXGRP, S_IROTH, S_IXOTH
 
 class StorageTest(TestCase):
     def setUp(self):
         self._tempdir = mkdtemp()
-    
+
     def tearDown(self):
         isdir(self._tempdir) and rmtree(self._tempdir)
 
@@ -44,24 +46,24 @@ class StorageTest(TestCase):
         self.assertFalse(isdir(myStorageDir))
         s = Storage(myStorageDir)
         self.assertTrue(isdir(myStorageDir))
-        
+
     def testPutEmptyFile(self):
         s = Storage(self._tempdir)
-        s.put('mydata')            
+        s.put('mydata')
         expectedFilename = join(self._tempdir, 'mydata')
         self.assertTrue(isfile(expectedFilename))
-        
+
     def testPutData(self):
         s = Storage(self._tempdir)
-        sink = s.put('mydata')            
+        sink = s.put('mydata')
         sink.send('some data of mine')
         sink.close()
         expectedFilename = join(self._tempdir, 'mydata')
         self.assertEquals('some data of mine', open(expectedFilename).read())
-        
+
     def testGetData(self):
         s = Storage(self._tempdir)
-        sink = s.put('mydata')            
+        sink = s.put('mydata')
         sink.send('some data of mine')
         sink.close()
         self.assertTrue('mydata' in s)
@@ -76,7 +78,7 @@ class StorageTest(TestCase):
             self.fail()
         except KeyError, k:
             self.assertEquals("'name'", str(k))
-        
+
     def testGetAllData(self):
         s = Storage(self._tempdir)
         sink = s.put('mydata')
@@ -88,16 +90,16 @@ class StorageTest(TestCase):
         for block in stream:
             data.append(block)
         self.assertEquals(['some data of minesome more data of mine'], data)
-        
+
     def testPutStorage(self):
         s1 = Storage(join(self._tempdir, 'basedir1'))
         s2 = Storage(join(self._tempdir, 'basedir2'))
-        sink = s1.put('mydata')            
+        sink = s1.put('mydata')
         sink.send('data')
         sink.close()
-        
+
         newStorage = s2.put('s1', s1)
-        
+
         self.assertEquals('data', s2.get('s1').get('mydata').next())
         self.assertEquals('data', s1.get('mydata').next())
         self.assertEquals('data', newStorage.get('mydata').next())
@@ -109,7 +111,7 @@ class StorageTest(TestCase):
         self.assertEquals('basedir2', s2.name)
         s2.put('s1', s1)
         self.assertEquals('s1', s1.name)
-        
+
 
     def testPutStorageAssumesOwnership(self):
         s1 = Storage(join(self._tempdir, 'basedir1'))
@@ -134,12 +136,12 @@ class StorageTest(TestCase):
             self.fail()
         except KeyError, e:
             self.assertEquals("'Key already exists: name'", str(e))
-        
+
     def testPutStorageOverEmptyStorage(self):
         s = Storage(self._tempdir)
         s.put('name', Storage())
         s.put('name', Storage())
-    
+
     def testPutStorageOverStorageFails(self):
         s = Storage(self._tempdir)
         s.put('name', Storage()).put('sub').close()
@@ -186,7 +188,7 @@ class StorageTest(TestCase):
             self.fail()
         except KeyError, e:
             self.assertEquals("'Empty name'", str(e))
-    
+
     def testEmptyNameStorage(self):
         s = Storage()
         try:
@@ -227,7 +229,7 @@ class StorageTest(TestCase):
         s = Storage()
         result = s.put('name').close()
         self.assertEquals(None, result)
-        
+
     def testInitialRevision(self):
         s = Storage(revisionControl=True)
         sink = s.put('name')
@@ -267,7 +269,7 @@ class StorageTest(TestCase):
         s = Storage(self._tempdir, revisionControl=True)
         revisions = s.get('sub').put('other').close()
         self.assertEquals((0,1), revisions)
-        
+
 
     def testDeleteFile(self):
         s = Storage(self._tempdir, revisionControl=True)
@@ -303,7 +305,7 @@ class StorageTest(TestCase):
         s.put('name').close()
         allnames = [item.name for item in s]
         self.assertEquals(['name'], allnames)
-            
+
     def testEnumerateFilesWithStrangeNames(self):
         def create(storage, name):
             storage.put(name).close()
@@ -358,7 +360,7 @@ class StorageTest(TestCase):
         s = Storage(self._tempdir)
         s.put('name.xml').close()
         self.assertTrue(isfile(join(self._tempdir, 'name.xml')))
-        
+
     def testMoveOverDevicesFails(self):
         mydir = join(getcwd(), 'justForOneTest')
         try:
@@ -366,7 +368,20 @@ class StorageTest(TestCase):
             s.put('test', s.newStorage())
         finally:
             rmtree(mydir)
-        
+
+    def testRandomTempDirectory(self):
+        s = Storage()
+        def assertHasBit(bit):
+            self.assertTrue(stat(s._basedir)[ST_MODE] & bit == bit)
+
+        assertHasBit(S_IRUSR)
+        assertHasBit(S_IWUSR)
+        assertHasBit(S_IXUSR)
+        assertHasBit(S_IRGRP)
+        assertHasBit(S_IXGRP)
+        assertHasBit(S_IROTH)
+        assertHasBit(S_IXOTH)
+
 
     #TODO
 
