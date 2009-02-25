@@ -188,6 +188,32 @@ class HierarchicalStorageTest(TestCase):
         l = list(f)
         self.assertEquals(set(['something', 'left.right', 'left.middle.right']), set(l))
 
+    def testGlobEmptyName(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s, split=lambda s: s.split('.'), join=lambda l: ".".join(l))
+        try:
+            list(f.glob(''))
+            self.fail()
+        except KeyError, e:
+            self.assertEquals("'Empty name'", str(e))
+
+
+    def testGlobStorage(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s, split=lambda s: s.split('.'), join=lambda l: ".".join(l))
+        f.put('a.b').close()
+        f.put('a.c.file_one').close()
+        f.put('a.c.file_two').close()
+        f.put('a.d.a').close()
+
+        self.assertEquals(set(['a.c.file_one', 'a.c.file_two']), set(list(f.glob('a.c.file'))))
+        self.assertEquals(set(['a.b', 'a.c.file_one', 'a.c.file_two', 'a.d.a']), set(list(f.glob('a'))))
+        self.assertEquals(set(['a.b']), set(list(f.glob('a.b'))))
+
+        f.put('a.c.file_three').close()
+        self.assertEquals(set(['a.c.file_one', 'a.c.file_two', 'a.c.file_three']), set(list(f.glob('a.c.file_t'))))
+        self.assertEquals(set(['a.c.file_one', 'a.c.file_two', 'a.c.file_three']), set(list(f.glob('a.c'))))
+
     def testBasePathOnDifferentDeviceThenTmp(self):
         mydir = join(getcwd(), 'justForOneTest')
         try:

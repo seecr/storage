@@ -94,5 +94,17 @@ class HierarchicalStorage(object):
                 for fileName in self.allFilenamesIn(storageOrFile):
                     yield [aStorage.name] + fileName
 
+    def glob(self, pattern):
+        splitted = self._split(pattern)
+        store = self._storage
+        eatenName = []
+        for storeName in splitted:
+            if storeName in store:
+                eatenName.append(storeName)
+                store = store.get(storeName)
+
+        for item in self.allFilenamesIn(store):
+            yield self._join(eatenName + item[1:])
+
 class HierarchicalStorageError(Exception):
     pass
