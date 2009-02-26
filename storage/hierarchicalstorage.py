@@ -99,6 +99,8 @@ class HierarchicalStorage(object):
         store = self._storage
         eatenName = []
         for storeName in splitted:
+            if storeName == '':
+                break
             if storeName in store:
                 eatenName.append(storeName)
                 store = store.get(storeName)

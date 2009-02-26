@@ -191,11 +191,12 @@ class HierarchicalStorageTest(TestCase):
     def testGlobEmptyName(self):
         s = Storage(self._tempdir)
         f = HierarchicalStorage(s, split=lambda s: s.split('.'), join=lambda l: ".".join(l))
-        try:
-            list(f.glob(''))
-            self.fail()
-        except KeyError, e:
-            self.assertEquals("'Empty name'", str(e))
+        f.put('a.b').close()
+        f.put('a.c.file_one').close()
+        f.put('a.c.file_two').close()
+        f.put('a.d.a').close()
+
+        self.assertEquals(set(['a.b', 'a.c.file_one', 'a.c.file_two', 'a.d.a']), set(list(f.glob(''))))
 
 
     def testGlobStorage(self):
