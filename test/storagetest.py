@@ -30,13 +30,17 @@ from storage import Storage
 from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import join, isdir, isfile
-from os import getcwd, listdir, stat
+from os import getcwd, listdir, stat, popen2
 
 from stat import ST_MODE, S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IXGRP, S_IROTH, S_IXOTH
+
 
 class StorageTest(TestCase):
     def setUp(self):
         self._tempdir = mkdtemp()
+
+        i, o = popen2('which ci 2>/dev/null')
+        self.revisionAvailable = o.read() != ''
 
     def tearDown(self):
         isdir(self._tempdir) and rmtree(self._tempdir)
@@ -231,6 +235,10 @@ class StorageTest(TestCase):
         self.assertEquals(None, result)
 
     def testInitialRevision(self):
+        if not self.revisionAvailable:
+            print "\nSkipping testInitialRevision: RCS not available"
+            return
+
         s = Storage(revisionControl=True)
         sink = s.put('name')
         sink.send('data')
@@ -239,6 +247,9 @@ class StorageTest(TestCase):
         self.assertEquals(1, newrevision)
 
     def testNewRevision(self):
+        if not self.revisionAvailable:
+            print "\nSkipping testNewRevision: RCS not available"
+            return
         s = Storage(revisionControl=True)
         sink = s.put('name')
         sink.send('data')
@@ -250,6 +261,10 @@ class StorageTest(TestCase):
         self.assertEquals(2, newrevision)
 
     def testSameRevision(self):
+        if not self.revisionAvailable:
+            print "\nSkipping testSameRevision: RCS not available"
+            return
+
         s = Storage(revisionControl=True)
         sink = s.put('name')
         sink.send('data')
@@ -261,6 +276,10 @@ class StorageTest(TestCase):
         self.assertEquals(1, newrevision)
 
     def testRevisionFlagPassedDown(self):
+        if not self.revisionAvailable:
+            print "\nSkipping testRevisionFlagPassedDown: RCS not available"
+            return
+
         s1 = Storage(self._tempdir, revisionControl=True)
         s2 = Storage()
         s1.put('sub', s2)
@@ -272,6 +291,10 @@ class StorageTest(TestCase):
 
 
     def testDeleteFile(self):
+        if not self.revisionAvailable:
+            print "\nSkipping testDeleteFile: RCS not available"
+            return
+
         s = Storage(self._tempdir, revisionControl=True)
         s.put('name').close()
         s.delete('name')
