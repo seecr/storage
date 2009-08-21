@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ## begin license ##
 #
 #    Storage stores data in a reliable, extendable filebased storage
@@ -23,14 +24,12 @@
 ## end license ##
 
 from storage import File
-from os.path import isfile, abspath
-from os import walk, sep
 
 def catchKeyError(message, aMethod):
     def wrapper(self, name):
         try:
             return aMethod(self, name)
-        except KeyError, e:
+        except KeyError:
             raise HierarchicalStorageError(message % str(name))
     return wrapper
 
@@ -38,7 +37,7 @@ catchPutError = lambda aMethod: catchKeyError("Name '%s' not allowed.", aMethod)
 catchDoesNotExistError = lambda aMethod: catchKeyError("Name '%s' does not exist.", aMethod)
 
 class HierarchicalStorage(object):
-    def __init__(self, storage, split = lambda x:(x,), join=lambda x:''.join(x)):
+    def __init__(self, storage, split = lambda x:(x,), join=''.join):
         self._storage = storage
         self._split = split
         self._join = join

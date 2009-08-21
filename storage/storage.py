@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ## begin license ##
 #
 #    Storage stores data in a reliable, extendable filebased storage
@@ -24,19 +25,19 @@
 
 from os.path import join, isdir, basename, isfile
 from os import makedirs, rename, popen3, remove, listdir
-from tempfile import mkdtemp, gettempdir
+from tempfile import gettempdir
 from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
 from shutil import rmtree
-from re import compile
+import re
 from random import choice
 
 defaultTempdir = gettempdir()
 BAD_CHARS = map(chr, range(32)) + ['/', '%', ',']
-FIND_BAD_CHARS = compile('(^\.|' + '|'.join(BAD_CHARS)+')')
+FIND_BAD_CHARS = re.compile('(^\.|' + '|'.join(BAD_CHARS)+')')
 CHAR_TO_HEX = lambda x: '%%%02X' % ord(x.group(1))
 
 HEX_TO_CHAR = lambda x:chr(int(x.group(1),16))
-REVERSE_BAD_CHARS = compile('%([0-9A-F]{2})')
+REVERSE_BAD_CHARS = re.compile('%([0-9A-F]{2})')
 
 BAD_BASH_CHARS = ['!','@','$','&','<','>', '|', '(',')',';', '*', '`', '\'', '"', '\\', ' ']
 
@@ -92,8 +93,8 @@ class Storage(object):
                 aStorage._revisionControl = self._revisionControl
                 return aStorage
             else:
-                file = open(path, 'w')
-                return Sink(file, self._revisionControl)
+                fd = open(path, 'w')
+                return Sink(fd, self._revisionControl)
         except (OSError,IOError), e:
             if e.errno == ENAMETOOLONG:
                 raise KeyError('Name too long: ' + name)
@@ -135,14 +136,14 @@ class Storage(object):
             if not item.endswith(',v'):
                 yield self.get(unescapeName(item))
 
-responsePattern = compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
+responsePattern = re.compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
 
 class Sink(object):
-    def __init__(self, file, revisionControl):
-        self.send = file.write
-        self.name = file.name
-        self.fileno = file.fileno
-        self._close = file.close
+    def __init__(self, fd, revisionControl):
+        self.send = fd.write
+        self.name = fd.name
+        self.fileno = fd.fileno
+        self._close = fd.close
         self._revisionControl = revisionControl
 
     def close(self):
