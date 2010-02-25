@@ -53,14 +53,15 @@ def bashEscape(name):
     return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
 
 class Storage(object):
-    def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir):
+    def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir, checkExists=True):
         if not basedir:
             self._basedir = self._createRandomDirectory(tempdir=tempdir)
             self._own = True
         else:
             self._basedir = basedir
             self._own = False
-            isdir(self._basedir) or makedirs(self._basedir)
+            if checkExists:
+                isdir(self._basedir) or makedirs(self._basedir)
         self._revisionControl = revisionControl
         self.name = unescapeName(basename(self._basedir))
 
@@ -113,6 +114,20 @@ class Storage(object):
         elif isfile(path):
             return File(path)
         raise KeyError(name)
+
+    def getStorage(self, name):
+        if not name:
+            raise KeyError('Empty name')
+        path = join(self._basedir, escapeName(name))
+        return Storage(path, revisionControl=self._revisionControl, checkExists=False)
+
+    def getFile(self, name):
+        if not name:
+            raise KeyError('Empty name')
+        path = join(self._basedir, escapeName(name))
+        if not isfile(path):
+            raise KeyError(self.name)
+        return File(path)
 
     def __contains__(self, name):
         path = join(self._basedir, escapeName(name))

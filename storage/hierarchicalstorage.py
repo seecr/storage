@@ -57,8 +57,9 @@ class HierarchicalStorage(object):
     def get(self, name):
         splitted = self._split(name)
         result = self._storage
-        for storeName in splitted:
-            result = result.get(storeName)
+        for storeName in splitted[:-1]:
+            result = result.getStorage(storeName)
+        result = result.get(splitted[-1])
         return result
 
     @catchDoesNotExistError
@@ -70,14 +71,11 @@ class HierarchicalStorage(object):
         store.delete(splitted[-1])
 
     def __contains__(self, name):
-        splitted = self._split(name)
-        store = self._storage
         try:
-            for storeName in splitted[:-1]:
-                store = store.get(storeName)
-        except KeyError:
+            self.get(name)
+            return True
+        except HierarchicalStorageError:
             return False
-        return splitted[-1] in store
 
     def __iter__(self):
         SKIP_BASENAME = 1

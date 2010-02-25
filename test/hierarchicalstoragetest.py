@@ -136,6 +136,8 @@ class HierarchicalStorageTest(TestCase):
         self.assertFalse('sub.one' in f)
         self.assertFalse('one.one' in f)
         self.assertTrue('one.two' in f)
+        self.assertTrue('one' in f)
+        self.assertFalse('sub' in f)
 
     def testDeleteFile(self):
         s = Storage(self._tempdir)
