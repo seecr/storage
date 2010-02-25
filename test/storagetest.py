@@ -3,7 +3,7 @@
 #
 #    Storage stores data in a reliable, extendable filebased storage
 #    with great performance.
-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
+#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 #    This file is part of Storage.
 #
@@ -405,11 +405,3 @@ class StorageTest(TestCase):
         assertHasBit(S_IROTH)
         assertHasBit(S_IXOTH)
 
-
-    #TODO
-
-    # Probably the following are YAGNI:
-    # move
-    # move over existing ...
-    # move non existing
-    # move to substorage??

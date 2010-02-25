@@ -3,7 +3,7 @@
 #
 #    Storage stores data in a reliable, extendable filebased storage
 #    with great performance.
-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
+#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 #    This file is part of Storage.
 #
@@ -60,6 +60,16 @@ class HierarchicalStorage(object):
         for storeName in splitted[:-1]:
             result = result.getStorage(storeName)
         result = result.get(splitted[-1])
+        return result
+
+    @catchDoesNotExistError
+    def getFile(self, name):
+        """Returns a file without checking for existence!"""
+        splitted = self._split(name)
+        result = self._storage
+        for storeName in splitted[:-1]:
+            result = result.getStorage(storeName)
+        result = result.getFile(splitted[-1])
         return result
 
     @catchDoesNotExistError

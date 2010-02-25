@@ -3,7 +3,7 @@
 #
 #    Storage stores data in a reliable, extendable filebased storage
 #    with great performance.
-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
+#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 #    This file is part of Storage.
 #
@@ -125,8 +125,6 @@ class Storage(object):
         if not name:
             raise KeyError('Empty name')
         path = join(self._basedir, escapeName(name))
-        if not isfile(path):
-            raise KeyError(self.name)
         return File(path)
 
     def __contains__(self, name):

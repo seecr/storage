@@ -2,7 +2,7 @@
 #
 #    Storage stores data in a reliable, extendable filebased storage
 #    with great performance.
-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
+#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
 #
 #    This file is part of Storage.
 #
@@ -226,14 +226,20 @@ class HierarchicalStorageTest(TestCase):
         finally:
             rmtree(mydir)
 
+    def testGetFile(self):
+        s = Storage(self._tempdir)
+        h = HierarchicalStorage(s, split=lambda s: s.split('.'))
+        ab_file = h.put('a.b')
+        ab_file.send('A.B')
+        ab_file.close()
+        ab = h.getFile('a.b')
+        a_notexist = h.getFile('a.notexist')
+        a = h.getFile('a')
+        notexist = h.getFile('notexist')
+        self.assertEquals('A.B', ''.join(ab))
+        self.assertRaises(IOError, lambda: list(a_notexist))
+        self.assertRaises(IOError, lambda: list(a))
+        self.assertRaises(IOError, lambda: list(notexist))
 
 
-    # TODO
-    # get with a Storage ????
 
-    # assert bij Aanmaken HierarchicalStorage dat string == join(split(string)) lijst = split(join(lijst))
-    # waarschijnlijk niet gewenst, omdat testdata niet geschikt kan zijn.
-    #
-    # - put('one') where 'one' is a storage
-    # - exists
-    # - enumerate Names
