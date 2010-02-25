@@ -1,0 +1,189 @@
+Changeset created on Thu Feb 25 16:08:15 CET 2010 by Seek You Too
+
+Description: Systemcall optimization
+
+    Storage uses less systemcalls like isfile and isdir. The
+    changes are backwards compatible. 
+
+    Added new getFile method to HierarchicalStorage which will
+    always return a File object, regardless of its existence.
+    This even further lowers the amount of systemcalls. Only when
+    trying to open/use the file an IOError might be raised.
+
+Baseline version: tags/version_5.1.6
+
+diff --unidirectional-new-file --exclude=.svn --exclude='*.pyc' --exclude=applied --recursive --unified storage-trunk@10375/storage/hierarchicalstorage.py storage-trunk/storage/hierarchicalstorage.py
+--- storage-trunk@10375/storage/hierarchicalstorage.py	2010-02-25 16:03:59.000000000 +0100
++++ storage-trunk/storage/hierarchicalstorage.py	2010-02-25 16:00:42.000000000 +0100
+@@ -3,7 +3,7 @@
+ #
+ #    Storage stores data in a reliable, extendable filebased storage
+ #    with great performance.
+-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
++#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+ #
+ #    This file is part of Storage.
+ #
+@@ -57,8 +57,19 @@
+     def get(self, name):
+         splitted = self._split(name)
+         result = self._storage
+-        for storeName in splitted:
+-            result = result.get(storeName)
++        for storeName in splitted[:-1]:
++            result = result.getStorage(storeName)
++        result = result.get(splitted[-1])
++        return result
++
++    @catchDoesNotExistError
++    def getFile(self, name):
++        """Returns a file without checking for existence!"""
++        splitted = self._split(name)
++        result = self._storage
++        for storeName in splitted[:-1]:
++            result = result.getStorage(storeName)
++        result = result.getFile(splitted[-1])
+         return result
+ 
+     @catchDoesNotExistError
+@@ -70,14 +81,11 @@
+         store.delete(splitted[-1])
+ 
+     def __contains__(self, name):
+-        splitted = self._split(name)
+-        store = self._storage
+         try:
+-            for storeName in splitted[:-1]:
+-                store = store.get(storeName)
+-        except KeyError:
++            self.get(name)
++            return True
++        except HierarchicalStorageError:
+             return False
+-        return splitted[-1] in store
+ 
+     def __iter__(self):
+         SKIP_BASENAME = 1
+diff --unidirectional-new-file --exclude=.svn --exclude='*.pyc' --exclude=applied --recursive --unified storage-trunk@10375/storage/storage.py storage-trunk/storage/storage.py
+--- storage-trunk@10375/storage/storage.py	2010-02-25 16:03:59.000000000 +0100
++++ storage-trunk/storage/storage.py	2010-02-25 16:00:42.000000000 +0100
+@@ -3,7 +3,7 @@
+ #
+ #    Storage stores data in a reliable, extendable filebased storage
+ #    with great performance.
+-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
++#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+ #
+ #    This file is part of Storage.
+ #
+@@ -53,14 +53,15 @@
+     return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
+ 
+ class Storage(object):
+-    def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir):
++    def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir, checkExists=True):
+         if not basedir:
+             self._basedir = self._createRandomDirectory(tempdir=tempdir)
+             self._own = True
+         else:
+             self._basedir = basedir
+             self._own = False
+-            isdir(self._basedir) or makedirs(self._basedir)
++            if checkExists:
++                isdir(self._basedir) or makedirs(self._basedir)
+         self._revisionControl = revisionControl
+         self.name = unescapeName(basename(self._basedir))
+ 
+@@ -114,6 +115,18 @@
+             return File(path)
+         raise KeyError(name)
+ 
++    def getStorage(self, name):
++        if not name:
++            raise KeyError('Empty name')
++        path = join(self._basedir, escapeName(name))
++        return Storage(path, revisionControl=self._revisionControl, checkExists=False)
++
++    def getFile(self, name):
++        if not name:
++            raise KeyError('Empty name')
++        path = join(self._basedir, escapeName(name))
++        return File(path)
++
+     def __contains__(self, name):
+         path = join(self._basedir, escapeName(name))
+         return isfile(path) or isdir(path)
+diff --unidirectional-new-file --exclude=.svn --exclude='*.pyc' --exclude=applied --recursive --unified storage-trunk@10375/test/hierarchicalstoragetest.py storage-trunk/test/hierarchicalstoragetest.py
+--- storage-trunk@10375/test/hierarchicalstoragetest.py	2010-02-25 16:03:59.000000000 +0100
++++ storage-trunk/test/hierarchicalstoragetest.py	2010-02-25 16:00:42.000000000 +0100
+@@ -2,7 +2,7 @@
+ #
+ #    Storage stores data in a reliable, extendable filebased storage
+ #    with great performance.
+-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
++#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+ #
+ #    This file is part of Storage.
+ #
+@@ -136,6 +136,8 @@
+         self.assertFalse('sub.one' in f)
+         self.assertFalse('one.one' in f)
+         self.assertTrue('one.two' in f)
++        self.assertTrue('one' in f)
++        self.assertFalse('sub' in f)
+ 
+     def testDeleteFile(self):
+         s = Storage(self._tempdir)
+@@ -224,14 +226,20 @@
+         finally:
+             rmtree(mydir)
+ 
++    def testGetFile(self):
++        s = Storage(self._tempdir)
++        h = HierarchicalStorage(s, split=lambda s: s.split('.'))
++        ab_file = h.put('a.b')
++        ab_file.send('A.B')
++        ab_file.close()
++        ab = h.getFile('a.b')
++        a_notexist = h.getFile('a.notexist')
++        a = h.getFile('a')
++        notexist = h.getFile('notexist')
++        self.assertEquals('A.B', ''.join(ab))
++        self.assertRaises(IOError, lambda: list(a_notexist))
++        self.assertRaises(IOError, lambda: list(a))
++        self.assertRaises(IOError, lambda: list(notexist))
+ 
+ 
+-    # TODO
+-    # get with a Storage ????
+ 
+-    # assert bij Aanmaken HierarchicalStorage dat string == join(split(string)) lijst = split(join(lijst))
+-    # waarschijnlijk niet gewenst, omdat testdata niet geschikt kan zijn.
+-    #
+-    # - put('one') where 'one' is a storage
+-    # - exists
+-    # - enumerate Names
+diff --unidirectional-new-file --exclude=.svn --exclude='*.pyc' --exclude=applied --recursive --unified storage-trunk@10375/test/storagetest.py storage-trunk/test/storagetest.py
+--- storage-trunk@10375/test/storagetest.py	2010-02-25 16:03:59.000000000 +0100
++++ storage-trunk/test/storagetest.py	2010-02-25 16:00:42.000000000 +0100
+@@ -3,7 +3,7 @@
+ #
+ #    Storage stores data in a reliable, extendable filebased storage
+ #    with great performance.
+-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
++#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+ #
+ #    This file is part of Storage.
+ #
+@@ -405,11 +405,3 @@
+         assertHasBit(S_IROTH)
+         assertHasBit(S_IXOTH)
+ 
+-
+-    #TODO
+-
+-    # Probably the following are YAGNI:
+-    # move
+-    # move over existing ...
+-    # move non existing
+-    # move to substorage??
