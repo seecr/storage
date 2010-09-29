@@ -24,7 +24,8 @@
 ## end license ##
 
 from os.path import join, isdir, basename, isfile
-from os import makedirs, rename, popen3, remove, listdir
+from os import makedirs, rename, remove, listdir
+from subprocess import Popen, PIPE
 from tempfile import gettempdir
 from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
 from shutil import rmtree
@@ -165,8 +166,11 @@ class Sink(object):
             return self._generateRevision()
 
     def _generateRevision(self):
-        stdin, stdout, stderr = popen3("ci -t-storage -l -mnomesg %s" % bashEscape(self.name))
-        response = stderr.read()
+        p = Popen(
+            ['ci', '-t-storage', '-l', '-mnomesg', bashEscape(self.name)], 
+            stdout=PIPE,
+            stderr=PIPE)
+        response = p.stderr.read()
         result = responsePattern.match(response).groupdict()
         if result['status'] == 'initial':
             return 0, int(result['revision1'])

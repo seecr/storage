@@ -30,7 +30,8 @@ from storage import Storage
 from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import join, isdir, isfile
-from os import getcwd, listdir, stat, popen2
+from os import getcwd, listdir, stat
+import subprocess
 
 from stat import ST_MODE, S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IXGRP, S_IROTH, S_IXOTH
 
@@ -39,8 +40,9 @@ class StorageTest(TestCase):
     def setUp(self):
         self._tempdir = mkdtemp()
 
-        i, o = popen2('which ci 2>/dev/null')
-        self.revisionAvailable = o.read() != ''
+        self.revisionAvailable = 0 == subprocess.call(
+                ['which', 'ci'],
+                stdout=subprocess.PIPE)
 
     def tearDown(self):
         isdir(self._tempdir) and rmtree(self._tempdir)
