@@ -95,8 +95,7 @@ class Storage(object):
                 aStorage._revisionControl = self._revisionControl
                 return aStorage
             else:
-                fd = open(path, 'w')
-                return Sink(fd, self._revisionControl)
+                return Sink(path, self._revisionControl)
         except (OSError,IOError), e:
             if e.errno == ENAMETOOLONG:
                 raise KeyError('Name too long: ' + name)
@@ -153,15 +152,20 @@ class Storage(object):
 responsePattern = re.compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
 
 class Sink(object):
-    def __init__(self, fd, revisionControl):
+    def __init__(self, path, revisionControl):
+        self._openpath = path
+        if isfile(path):
+            self._openpath += '~'
+        fd = open(self._openpath, 'w')
         self.send = fd.write
-        self.name = fd.name
+        self.name = path
         self.fileno = fd.fileno
         self._close = fd.close
         self._revisionControl = revisionControl
 
     def close(self):
         self._close()
+        rename(self._openpath, self.name)
         if self._revisionControl:
             return self._generateRevision()
 

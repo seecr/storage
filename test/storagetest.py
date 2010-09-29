@@ -407,3 +407,16 @@ class StorageTest(TestCase):
         assertHasBit(S_IROTH)
         assertHasBit(S_IXOTH)
 
+    def testWriteReadSimultaneously(self):
+        s = Storage(self._tempdir)
+        sink = s.put('mydata')
+        sink.send('firsttimedata')
+        sink.close()
+        sink2 = s.put("mydata")
+        sink2.send("second\n"*12345)
+        f = s.get("mydata")
+        self.assertEquals("first", f.read(5))
+        sink2.send("more")
+        sink2.close()
+        f = s.get("mydata")
+        self.assertEquals("second", f.read(6))
