@@ -1,0 +1,70 @@
+Changeset created on Fri Feb 27 14:30:57 CEST 2009 by Seek You Too
+
+Description: HierarchicalStorage with glob(...)
+
+    HierarchicalStorage now supports the glob(...) method which
+    will return allFilenames responding to a given pattern. E.g.
+    it will return all files in a substorage.
+
+Baseline version: svn+ssh://svn@svn.cq2.org/svn/storage/tags/version_5.1.5
+
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_5.1.5/storage/hierarchicalstorage.py version_5.1.6/storage/hierarchicalstorage.py
+--- version_5.1.5/storage/hierarchicalstorage.py	2010-09-30 21:49:53.000000000 +0200
++++ version_5.1.6/storage/hierarchicalstorage.py	2010-09-30 21:49:53.000000000 +0200
+@@ -94,5 +94,19 @@
+                 for fileName in self.allFilenamesIn(storageOrFile):
+                     yield [aStorage.name] + fileName
+ 
++    def glob(self, pattern):
++        splitted = self._split(pattern)
++        store = self._storage
++        eatenName = []
++        for storeName in splitted:
++            if storeName == '':
++                break
++            if storeName in store:
++                eatenName.append(storeName)
++                store = store.get(storeName)
++
++        for item in self.allFilenamesIn(store):
++            yield self._join(eatenName + item[1:])
++
+ class HierarchicalStorageError(Exception):
+     pass
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_5.1.5/test/hierarchicalstoragetest.py version_5.1.6/test/hierarchicalstoragetest.py
+--- version_5.1.5/test/hierarchicalstoragetest.py	2010-09-30 21:49:53.000000000 +0200
++++ version_5.1.6/test/hierarchicalstoragetest.py	2010-09-30 21:49:53.000000000 +0200
+@@ -188,6 +188,33 @@
+         l = list(f)
+         self.assertEquals(set(['something', 'left.right', 'left.middle.right']), set(l))
+ 
++    def testGlobEmptyName(self):
++        s = Storage(self._tempdir)
++        f = HierarchicalStorage(s, split=lambda s: s.split('.'), join=lambda l: ".".join(l))
++        f.put('a.b').close()
++        f.put('a.c.file_one').close()
++        f.put('a.c.file_two').close()
++        f.put('a.d.a').close()
++
++        self.assertEquals(set(['a.b', 'a.c.file_one', 'a.c.file_two', 'a.d.a']), set(list(f.glob(''))))
++
++
++    def testGlobStorage(self):
++        s = Storage(self._tempdir)
++        f = HierarchicalStorage(s, split=lambda s: s.split('.'), join=lambda l: ".".join(l))
++        f.put('a.b').close()
++        f.put('a.c.file_one').close()
++        f.put('a.c.file_two').close()
++        f.put('a.d.a').close()
++
++        self.assertEquals(set(['a.c.file_one', 'a.c.file_two']), set(list(f.glob('a.c.file'))))
++        self.assertEquals(set(['a.b', 'a.c.file_one', 'a.c.file_two', 'a.d.a']), set(list(f.glob('a'))))
++        self.assertEquals(set(['a.b']), set(list(f.glob('a.b'))))
++
++        f.put('a.c.file_three').close()
++        self.assertEquals(set(['a.c.file_one', 'a.c.file_two', 'a.c.file_three']), set(list(f.glob('a.c.file_t'))))
++        self.assertEquals(set(['a.c.file_one', 'a.c.file_two', 'a.c.file_three']), set(list(f.glob('a.c'))))
++
+     def testBasePathOnDifferentDeviceThenTmp(self):
+         mydir = join(getcwd(), 'justForOneTest')
+         try:
