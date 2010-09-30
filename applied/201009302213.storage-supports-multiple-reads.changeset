@@ -1,0 +1,128 @@
+Changeset created on Thu Sep 30 22:13:11 CEST 2010 by Seek You Too
+
+Description: Support for multiple reads
+
+    Storage now supports reads from multiple servers. Writing of a file
+    is now done in a temporaryfile, which will now not interfere if the
+    same target is being read by another process.
+
+Baseline version: svn+ssh://svn@svn.cq2.org/svn/storage/tags/version_5.1.7
+
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_5.1.7/storage/storage.py version_5.1.8/storage/storage.py
+--- version_5.1.7/storage/storage.py	2010-09-30 21:49:53.000000000 +0200
++++ version_5.1.8/storage/storage.py	2010-09-30 22:12:15.000000000 +0200
+@@ -24,7 +24,8 @@
+ ## end license ##
+ 
+ from os.path import join, isdir, basename, isfile
+-from os import makedirs, rename, popen3, remove, listdir
++from os import makedirs, rename, remove, listdir
++from subprocess import Popen, PIPE
+ from tempfile import gettempdir
+ from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
+ from shutil import rmtree
+@@ -94,8 +95,7 @@
+                 aStorage._revisionControl = self._revisionControl
+                 return aStorage
+             else:
+-                fd = open(path, 'w')
+-                return Sink(fd, self._revisionControl)
++                return Sink(path, self._revisionControl)
+         except (OSError,IOError), e:
+             if e.errno == ENAMETOOLONG:
+                 raise KeyError('Name too long: ' + name)
+@@ -152,21 +152,29 @@
+ responsePattern = re.compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
+ 
+ class Sink(object):
+-    def __init__(self, fd, revisionControl):
++    def __init__(self, path, revisionControl):
++        self._openpath = path
++        if isfile(path):
++            self._openpath += ',t'
++        fd = open(self._openpath, 'w')
+         self.send = fd.write
+-        self.name = fd.name
++        self.name = path
+         self.fileno = fd.fileno
+         self._close = fd.close
+         self._revisionControl = revisionControl
+ 
+     def close(self):
+         self._close()
++        rename(self._openpath, self.name)
+         if self._revisionControl:
+             return self._generateRevision()
+ 
+     def _generateRevision(self):
+-        stdin, stdout, stderr = popen3("ci -t-storage -l -mnomesg %s" % bashEscape(self.name))
+-        response = stderr.read()
++        p = Popen(
++            ['ci', '-t-storage', '-l', '-mnomesg', bashEscape(self.name)], 
++            stdout=PIPE,
++            stderr=PIPE)
++        response = p.stderr.read()
+         result = responsePattern.match(response).groupdict()
+         if result['status'] == 'initial':
+             return 0, int(result['revision1'])
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_5.1.7/test/storagetest.py version_5.1.8/test/storagetest.py
+--- version_5.1.7/test/storagetest.py	2010-09-30 21:49:53.000000000 +0200
++++ version_5.1.8/test/storagetest.py	2010-09-30 22:12:15.000000000 +0200
+@@ -30,7 +30,8 @@
+ from tempfile import mkdtemp
+ from shutil import rmtree
+ from os.path import join, isdir, isfile
+-from os import getcwd, listdir, stat, popen2
++from os import getcwd, listdir, stat
++import subprocess
+ 
+ from stat import ST_MODE, S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IXGRP, S_IROTH, S_IXOTH
+ 
+@@ -39,8 +40,9 @@
+     def setUp(self):
+         self._tempdir = mkdtemp()
+ 
+-        i, o = popen2('which ci 2>/dev/null')
+-        self.revisionAvailable = o.read() != ''
++        self.revisionAvailable = 0 == subprocess.call(
++                ['which', 'ci'],
++                stdout=subprocess.PIPE)
+ 
+     def tearDown(self):
+         isdir(self._tempdir) and rmtree(self._tempdir)
+@@ -405,3 +407,16 @@
+         assertHasBit(S_IROTH)
+         assertHasBit(S_IXOTH)
+ 
++    def testWriteReadSimultaneously(self):
++        s = Storage(self._tempdir)
++        sink = s.put('mydata')
++        sink.send('firsttimedata')
++        sink.close()
++        sink2 = s.put("mydata")
++        sink2.send("second\n"*12345)
++        f = s.get("mydata")
++        self.assertEquals("first", f.read(5))
++        sink2.send("more")
++        sink2.close()
++        f = s.get("mydata")
++        self.assertEquals("second", f.read(6))
+diff --unidirectional-new-file --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied --recursive --unified version_5.1.7/testsetup.sh version_5.1.8/testsetup.sh
+--- version_5.1.7/testsetup.sh	1970-01-01 01:00:00.000000000 +0100
++++ version_5.1.8/testsetup.sh	2010-09-30 22:12:15.000000000 +0200
+@@ -0,0 +1,15 @@
++set -e
++
++rm -rf tmp build
++
++python setup.py install --root tmp
++
++export PYTHONPATH=$(find `pwd` -name '*-packages' -print)
++cp -r test tmp/test
++
++(
++cd tmp/test
++./alltests.py
++)
++
++rm -rf tmp build
