@@ -155,7 +155,7 @@ class Sink(object):
     def __init__(self, path, revisionControl):
         self._openpath = path
         if isfile(path):
-            self._openpath += '~'
+            self._openpath += ',t'
         fd = open(self._openpath, 'w')
         self.send = fd.write
         self.name = path
