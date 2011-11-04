@@ -29,7 +29,7 @@ def catchKeyError(message, aMethod):
     def wrapper(self, name):
         try:
             return aMethod(self, name)
-        except KeyError, e:
+        except KeyError:
             raise HierarchicalStorageError(message % str(name))
     return wrapper
 
