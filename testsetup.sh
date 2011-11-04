@@ -9,7 +9,7 @@ cp -r test tmp/test
 
 (
 cd tmp/test
-./alltests.py
+./alltests.sh
 )
 
 rm -rf tmp build

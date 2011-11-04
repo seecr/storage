@@ -97,7 +97,7 @@ class HierarchicalStorageTest(TestCase):
             sink = f.put('one..two')
             self.fail()
         except HierarchicalStorageError, e:
-            self.assertEquals("Name 'one..two' not allowed.", str(e))
+            self.assertEquals("Name 'one..two' not allowed: 'Empty name'", str(e))
 
     def testGetWithProblemSplit(self):
         s = Storage(self._tempdir)

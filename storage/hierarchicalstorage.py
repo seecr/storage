@@ -29,11 +29,19 @@ def catchKeyError(message, aMethod):
     def wrapper(self, name):
         try:
             return aMethod(self, name)
-        except KeyError:
+        except KeyError, e:
             raise HierarchicalStorageError(message % str(name))
     return wrapper
 
-catchPutError = lambda aMethod: catchKeyError("Name '%s' not allowed.", aMethod)
+def catchPutKeyError(message, aMethod):
+    def wrapper(self, name):
+        try:
+            return aMethod(self, name)
+        except KeyError, e:
+            raise HierarchicalStorageError("%s %s" % (message % name, str(e)))
+    return wrapper
+
+catchPutError = lambda aMethod: catchPutKeyError("Name '%s' not allowed:", aMethod)
 catchDoesNotExistError = lambda aMethod: catchKeyError("Name '%s' does not exist.", aMethod)
 
 class HierarchicalStorage(object):
