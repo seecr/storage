@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 ## begin license ##
-#
-#    Storage stores data in a reliable, extendable filebased storage
-#    with great performance.
-#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
-#
-#    This file is part of Storage.
-#
-#    Storage is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-#
-#    Storage is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with Storage; if not, write to the Free Software
-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
+# 
+# "Storage" stores data in a reliable, extendable filebased storage
+# with great performance. 
+# 
+# Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# 
+# This file is part of "Storage"
+# 
+# "Storage" is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# "Storage" is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with "Storage"; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+# 
 ## end license ##
 
 from storage import File
@@ -30,7 +32,7 @@ def catchKeyError(message, aMethod):
         try:
             return aMethod(self, name)
         except KeyError:
-            raise HierarchicalStorageError(message % str(name))
+            raise HierarchicalStorageError(message % repr(name))
     return wrapper
 
 def catchPutKeyError(message, aMethod):
@@ -38,11 +40,11 @@ def catchPutKeyError(message, aMethod):
         try:
             return aMethod(self, name)
         except KeyError, e:
-            raise HierarchicalStorageError("%s %s" % (message % name, str(e)))
+            raise HierarchicalStorageError("%s %s" % (message % repr(name), str(e)))
     return wrapper
 
-catchPutError = lambda aMethod: catchPutKeyError("Name '%s' not allowed:", aMethod)
-catchDoesNotExistError = lambda aMethod: catchKeyError("Name '%s' does not exist.", aMethod)
+catchPutError = lambda aMethod: catchPutKeyError("Name %s not allowed:", aMethod)
+catchDoesNotExistError = lambda aMethod: catchKeyError("Name %s does not exist.", aMethod)
 
 class HierarchicalStorage(object):
     def __init__(self, storage, split = lambda x:(x,), join=''.join):
