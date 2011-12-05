@@ -25,7 +25,6 @@
 
 from os.path import join, isdir, basename, isfile
 from os import makedirs, rename, remove, listdir
-from subprocess import Popen, PIPE
 from tempfile import gettempdir
 from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
 from shutil import rmtree
@@ -54,7 +53,7 @@ def bashEscape(name):
     return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
 
 class Storage(object):
-    def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir, checkExists=True):
+    def __init__(self, basedir=None, tempdir=defaultTempdir, checkExists=True):
         if not basedir:
             self._basedir = self._createRandomDirectory(tempdir=tempdir)
             self._own = True
@@ -63,7 +62,6 @@ class Storage(object):
             self._own = False
             if checkExists:
                 isdir(self._basedir) or makedirs(self._basedir)
-        self._revisionControl = revisionControl
         self.name = unescapeName(basename(self._basedir))
 
     def __del__(self):
@@ -92,10 +90,9 @@ class Storage(object):
         try:
             if aStorage:
                 aStorage._transferOwnership(path)
-                aStorage._revisionControl = self._revisionControl
                 return aStorage
             else:
-                return Sink(path, self._revisionControl)
+                return Sink(path)
         except (OSError,IOError), e:
             if e.errno == ENAMETOOLONG:
                 raise KeyError('Name too long: ' + name)
@@ -110,7 +107,7 @@ class Storage(object):
             raise KeyError('Empty name')
         path = join(self._basedir, escapeName(name))
         if isdir(path):
-            return Storage(path, revisionControl=self._revisionControl)
+            return Storage(path)
         elif isfile(path):
             return File(path)
         raise KeyError(name)
@@ -119,7 +116,7 @@ class Storage(object):
         if not name:
             raise KeyError('Empty name')
         path = join(self._basedir, escapeName(name))
-        return Storage(path, revisionControl=self._revisionControl, checkExists=False)
+        return Storage(path, checkExists=False)
 
     def getFile(self, name):
         if not name:
@@ -138,7 +135,6 @@ class Storage(object):
                 rmtree(path)
             else:
                 remove(path)
-                self._revisionControl and remove(path + ',v')
         except OSError, e:
             if e.errno == ENOENT:
                 raise KeyError(name)
@@ -146,13 +142,10 @@ class Storage(object):
 
     def __iter__(self):
         for item in listdir(self._basedir):
-            if not item.endswith(',v'):
-                yield self.get(unescapeName(item))
-
-responsePattern = re.compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
+            yield self.get(unescapeName(item))
 
 class Sink(object):
-    def __init__(self, path, revisionControl):
+    def __init__(self, path):
         self._openpath = path
         if isfile(path):
             self._openpath += ',t'
@@ -161,27 +154,10 @@ class Sink(object):
         self.name = path
         self.fileno = fd.fileno
         self._close = fd.close
-        self._revisionControl = revisionControl
 
     def close(self):
         self._close()
         rename(self._openpath, self.name)
-        if self._revisionControl:
-            return self._generateRevision()
-
-    def _generateRevision(self):
-        p = Popen(
-            ['ci', '-t-storage', '-l', '-mnomesg', bashEscape(self.name)], 
-            stdout=PIPE,
-            stderr=PIPE)
-        response = p.stderr.read()
-        result = responsePattern.match(response).groupdict()
-        if result['status'] == 'initial':
-            return 0, int(result['revision1'])
-        if result['status'] == 'unchanged':
-            return int(result['revision1']), int(result['revision1'])
-        if result['status'] == 'new':
-            return int(result['revision2']), int(result['revision1'])
 
 class File(object):
     def __init__(self, path):

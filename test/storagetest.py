@@ -40,10 +40,6 @@ class StorageTest(TestCase):
     def setUp(self):
         self._tempdir = mkdtemp()
 
-        self.revisionAvailable = 0 == subprocess.call(
-                ['which', 'ci'],
-                stdout=subprocess.PIPE)
-
     def tearDown(self):
         isdir(self._tempdir) and rmtree(self._tempdir)
 
@@ -236,77 +232,15 @@ class StorageTest(TestCase):
         result = s.put('name').close()
         self.assertEquals(None, result)
 
-    def testInitialRevision(self):
-        if not self.revisionAvailable:
-            print "\nSkipping testInitialRevision: RCS not available"
-            return
-
-        s = Storage(revisionControl=True)
-        sink = s.put('name')
-        sink.send('data')
-        oldrevision, newrevision = sink.close()
-        self.assertEquals(0, oldrevision)
-        self.assertEquals(1, newrevision)
-
-    def testNewRevision(self):
-        if not self.revisionAvailable:
-            print "\nSkipping testNewRevision: RCS not available"
-            return
-        s = Storage(revisionControl=True)
-        sink = s.put('name')
-        sink.send('data')
-        sink.close()
-        sink = s.put('name')
-        sink.send('otherdata')
-        oldrevision, newrevision = sink.close()
-        self.assertEquals(1, oldrevision)
-        self.assertEquals(2, newrevision)
-
-    def testSameRevision(self):
-        if not self.revisionAvailable:
-            print "\nSkipping testSameRevision: RCS not available"
-            return
-
-        s = Storage(revisionControl=True)
-        sink = s.put('name')
-        sink.send('data')
-        sink.close()
-        sink = s.put('name')
-        sink.send('data')
-        oldrevision, newrevision = sink.close()
-        self.assertEquals(1, oldrevision)
-        self.assertEquals(1, newrevision)
-
-    def testRevisionFlagPassedDown(self):
-        if not self.revisionAvailable:
-            print "\nSkipping testRevisionFlagPassedDown: RCS not available"
-            return
-
-        s1 = Storage(self._tempdir, revisionControl=True)
-        s2 = Storage()
-        s1.put('sub', s2)
-        revisions = s2.put('name').close()
-        self.assertEquals((0,1), revisions)
-        s = Storage(self._tempdir, revisionControl=True)
-        revisions = s.get('sub').put('other').close()
-        self.assertEquals((0,1), revisions)
-
-
     def testDeleteFile(self):
-        if not self.revisionAvailable:
-            print "\nSkipping testDeleteFile: RCS not available"
-            return
-
-        s = Storage(self._tempdir, revisionControl=True)
+        s = Storage(self._tempdir)
         s.put('name').close()
+        self.assertTrue(isfile(join(self._tempdir, 'name')))
         s.delete('name')
-        # delete also removes versions.
-        oldrev, newrev = s.put('name').close()
-        self.assertEquals(0, oldrev)
-        self.assertEquals(1, newrev)
+        self.assertFalse(isfile(join(self._tempdir, 'name')))
 
     def testDeleteStorage(self):
-        s = Storage(self._tempdir, revisionControl=True)
+        s = Storage(self._tempdir)
         substore = Storage()
         substore.put('name').close()
         s.put('sub', substore)
