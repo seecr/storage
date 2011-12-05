@@ -9,7 +9,7 @@ cp -r test tmp/test
 
 (
 cd tmp/test
-./alltests.sh
+./alltests.sh --$(pyversions --default)
 )
 
 rm -rf tmp build
