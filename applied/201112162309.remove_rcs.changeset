@@ -1,0 +1,464 @@
+Changeset created on Fri Dec 16 23:09:51 UTC 2011 by Seecr (Seek You Too B.V.)
+
+Description: Removed RCS support
+
+    Storage does not longer support version control using rcs. It was
+    hardly used.
+
+Baseline version: svn+ssh://svn@svn.cq2.org/svn/storage/workingsets/6.0-Seecr/version_0
+
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/deps.txt version_1/deps.txt
+--- version_0/deps.txt	2011-12-16 16:08:56.000000000 +0100
++++ version_1/deps.txt	2011-12-17 00:09:36.000000000 +0100
+@@ -1 +0,0 @@
+-rcs
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/setup.py version_1/setup.py
+--- version_0/setup.py	2011-12-16 16:08:56.000000000 +0100
++++ version_1/setup.py	2011-12-17 00:09:36.000000000 +0100
+@@ -1,26 +1,29 @@
+ ## begin license ##
+-#
+-#    Storage stores data in a reliable, extendable filebased storage
+-#    with great performance.
+-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
+-#
+-#    This file is part of Storage.
+-#
+-#    Storage is free software; you can redistribute it and/or modify
+-#    it under the terms of the GNU General Public License as published by
+-#    the Free Software Foundation; either version 2 of the License, or
+-#    (at your option) any later version.
+-#
+-#    Storage is distributed in the hope that it will be useful,
+-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#    GNU General Public License for more details.
+-#
+-#    You should have received a copy of the GNU General Public License
+-#    along with Storage; if not, write to the Free Software
+-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
++# 
++# "Storage" stores data in a reliable, extendable filebased storage
++# with great performance. 
++# 
++# Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
++# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
++# 
++# This file is part of "Storage"
++# 
++# "Storage" is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++# 
++# "Storage" is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with "Storage"; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# 
+ ## end license ##
++
+ from distutils.core import setup
+ 
+ setup(
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/storage/__init__.py version_1/storage/__init__.py
+--- version_0/storage/__init__.py	2011-12-16 16:08:56.000000000 +0100
++++ version_1/storage/__init__.py	2011-12-17 00:09:36.000000000 +0100
+@@ -1,25 +1,27 @@
+ ## begin license ##
+-#
+-#    Storage stores data in a reliable, extendable filebased storage
+-#    with great performance.
+-#    Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
+-#
+-#    This file is part of Storage.
+-#
+-#    Storage is free software; you can redistribute it and/or modify
+-#    it under the terms of the GNU General Public License as published by
+-#    the Free Software Foundation; either version 2 of the License, or
+-#    (at your option) any later version.
+-#
+-#    Storage is distributed in the hope that it will be useful,
+-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#    GNU General Public License for more details.
+-#
+-#    You should have received a copy of the GNU General Public License
+-#    along with Storage; if not, write to the Free Software
+-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
++# 
++# "Storage" stores data in a reliable, extendable filebased storage
++# with great performance. 
++# 
++# Copyright (C) 2006-2008 Seek You Too B.V. (CQ2) http://www.cq2.nl
++# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
++# 
++# This file is part of "Storage"
++# 
++# "Storage" is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++# 
++# "Storage" is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with "Storage"; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# 
+ ## end license ##
+ 
+ 
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/storage/storage.py version_1/storage/storage.py
+--- version_0/storage/storage.py	2011-12-16 16:08:56.000000000 +0100
++++ version_1/storage/storage.py	2011-12-17 00:09:36.000000000 +0100
+@@ -1,31 +1,32 @@
+ # -*- coding: utf-8 -*-
+ ## begin license ##
+-#
+-#    Storage stores data in a reliable, extendable filebased storage
+-#    with great performance.
+-#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+-#
+-#    This file is part of Storage.
+-#
+-#    Storage is free software; you can redistribute it and/or modify
+-#    it under the terms of the GNU General Public License as published by
+-#    the Free Software Foundation; either version 2 of the License, or
+-#    (at your option) any later version.
+-#
+-#    Storage is distributed in the hope that it will be useful,
+-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#    GNU General Public License for more details.
+-#
+-#    You should have received a copy of the GNU General Public License
+-#    along with Storage; if not, write to the Free Software
+-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
++# 
++# "Storage" stores data in a reliable, extendable filebased storage
++# with great performance. 
++# 
++# Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
++# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
++# 
++# This file is part of "Storage"
++# 
++# "Storage" is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++# 
++# "Storage" is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with "Storage"; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# 
+ ## end license ##
+ 
+ from os.path import join, isdir, basename, isfile
+ from os import makedirs, rename, remove, listdir
+-from subprocess import Popen, PIPE
+ from tempfile import gettempdir
+ from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
+ from shutil import rmtree
+@@ -54,7 +55,7 @@
+     return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
+ 
+ class Storage(object):
+-    def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir, checkExists=True):
++    def __init__(self, basedir=None, tempdir=defaultTempdir, checkExists=True):
+         if not basedir:
+             self._basedir = self._createRandomDirectory(tempdir=tempdir)
+             self._own = True
+@@ -63,7 +64,6 @@
+             self._own = False
+             if checkExists:
+                 isdir(self._basedir) or makedirs(self._basedir)
+-        self._revisionControl = revisionControl
+         self.name = unescapeName(basename(self._basedir))
+ 
+     def __del__(self):
+@@ -92,10 +92,9 @@
+         try:
+             if aStorage:
+                 aStorage._transferOwnership(path)
+-                aStorage._revisionControl = self._revisionControl
+                 return aStorage
+             else:
+-                return Sink(path, self._revisionControl)
++                return Sink(path)
+         except (OSError,IOError), e:
+             if e.errno == ENAMETOOLONG:
+                 raise KeyError('Name too long: ' + name)
+@@ -110,7 +109,7 @@
+             raise KeyError('Empty name')
+         path = join(self._basedir, escapeName(name))
+         if isdir(path):
+-            return Storage(path, revisionControl=self._revisionControl)
++            return Storage(path)
+         elif isfile(path):
+             return File(path)
+         raise KeyError(name)
+@@ -119,7 +118,7 @@
+         if not name:
+             raise KeyError('Empty name')
+         path = join(self._basedir, escapeName(name))
+-        return Storage(path, revisionControl=self._revisionControl, checkExists=False)
++        return Storage(path, checkExists=False)
+ 
+     def getFile(self, name):
+         if not name:
+@@ -138,7 +137,6 @@
+                 rmtree(path)
+             else:
+                 remove(path)
+-                self._revisionControl and remove(path + ',v')
+         except OSError, e:
+             if e.errno == ENOENT:
+                 raise KeyError(name)
+@@ -146,13 +144,10 @@
+ 
+     def __iter__(self):
+         for item in listdir(self._basedir):
+-            if not item.endswith(',v'):
+-                yield self.get(unescapeName(item))
+-
+-responsePattern = re.compile(r'(?s).*(?P<status>initial|unchanged|new).*?\d+\.(?P<revision1>\d+)[^\d]*(?:\d+\.(?P<revision2>\d+))?')
++            yield self.get(unescapeName(item))
+ 
+ class Sink(object):
+-    def __init__(self, path, revisionControl):
++    def __init__(self, path):
+         self._openpath = path
+         if isfile(path):
+             self._openpath += ',t'
+@@ -161,27 +156,10 @@
+         self.name = path
+         self.fileno = fd.fileno
+         self._close = fd.close
+-        self._revisionControl = revisionControl
+ 
+     def close(self):
+         self._close()
+         rename(self._openpath, self.name)
+-        if self._revisionControl:
+-            return self._generateRevision()
+-
+-    def _generateRevision(self):
+-        p = Popen(
+-            ['ci', '-t-storage', '-l', '-mnomesg', bashEscape(self.name)], 
+-            stdout=PIPE,
+-            stderr=PIPE)
+-        response = p.stderr.read()
+-        result = responsePattern.match(response).groupdict()
+-        if result['status'] == 'initial':
+-            return 0, int(result['revision1'])
+-        if result['status'] == 'unchanged':
+-            return int(result['revision1']), int(result['revision1'])
+-        if result['status'] == 'new':
+-            return int(result['revision2']), int(result['revision1'])
+ 
+ class File(object):
+     def __init__(self, path):
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/test/storagetest.py version_1/test/storagetest.py
+--- version_0/test/storagetest.py	2011-12-16 16:08:56.000000000 +0100
++++ version_1/test/storagetest.py	2011-12-17 00:09:36.000000000 +0100
+@@ -1,26 +1,28 @@
+ # -*- encoding: UTF-8
+ ## begin license ##
+-#
+-#    Storage stores data in a reliable, extendable filebased storage
+-#    with great performance.
+-#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+-#
+-#    This file is part of Storage.
+-#
+-#    Storage is free software; you can redistribute it and/or modify
+-#    it under the terms of the GNU General Public License as published by
+-#    the Free Software Foundation; either version 2 of the License, or
+-#    (at your option) any later version.
+-#
+-#    Storage is distributed in the hope that it will be useful,
+-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#    GNU General Public License for more details.
+-#
+-#    You should have received a copy of the GNU General Public License
+-#    along with Storage; if not, write to the Free Software
+-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
++# 
++# "Storage" stores data in a reliable, extendable filebased storage
++# with great performance. 
++# 
++# Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
++# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
++# 
++# This file is part of "Storage"
++# 
++# "Storage" is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++# 
++# "Storage" is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with "Storage"; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# 
+ ## end license ##
+ 
+ 
+@@ -40,10 +42,6 @@
+     def setUp(self):
+         self._tempdir = mkdtemp()
+ 
+-        self.revisionAvailable = 0 == subprocess.call(
+-                ['which', 'ci'],
+-                stdout=subprocess.PIPE)
+-
+     def tearDown(self):
+         isdir(self._tempdir) and rmtree(self._tempdir)
+ 
+@@ -236,77 +234,15 @@
+         result = s.put('name').close()
+         self.assertEquals(None, result)
+ 
+-    def testInitialRevision(self):
+-        if not self.revisionAvailable:
+-            print "\nSkipping testInitialRevision: RCS not available"
+-            return
+-
+-        s = Storage(revisionControl=True)
+-        sink = s.put('name')
+-        sink.send('data')
+-        oldrevision, newrevision = sink.close()
+-        self.assertEquals(0, oldrevision)
+-        self.assertEquals(1, newrevision)
+-
+-    def testNewRevision(self):
+-        if not self.revisionAvailable:
+-            print "\nSkipping testNewRevision: RCS not available"
+-            return
+-        s = Storage(revisionControl=True)
+-        sink = s.put('name')
+-        sink.send('data')
+-        sink.close()
+-        sink = s.put('name')
+-        sink.send('otherdata')
+-        oldrevision, newrevision = sink.close()
+-        self.assertEquals(1, oldrevision)
+-        self.assertEquals(2, newrevision)
+-
+-    def testSameRevision(self):
+-        if not self.revisionAvailable:
+-            print "\nSkipping testSameRevision: RCS not available"
+-            return
+-
+-        s = Storage(revisionControl=True)
+-        sink = s.put('name')
+-        sink.send('data')
+-        sink.close()
+-        sink = s.put('name')
+-        sink.send('data')
+-        oldrevision, newrevision = sink.close()
+-        self.assertEquals(1, oldrevision)
+-        self.assertEquals(1, newrevision)
+-
+-    def testRevisionFlagPassedDown(self):
+-        if not self.revisionAvailable:
+-            print "\nSkipping testRevisionFlagPassedDown: RCS not available"
+-            return
+-
+-        s1 = Storage(self._tempdir, revisionControl=True)
+-        s2 = Storage()
+-        s1.put('sub', s2)
+-        revisions = s2.put('name').close()
+-        self.assertEquals((0,1), revisions)
+-        s = Storage(self._tempdir, revisionControl=True)
+-        revisions = s.get('sub').put('other').close()
+-        self.assertEquals((0,1), revisions)
+-
+-
+     def testDeleteFile(self):
+-        if not self.revisionAvailable:
+-            print "\nSkipping testDeleteFile: RCS not available"
+-            return
+-
+-        s = Storage(self._tempdir, revisionControl=True)
++        s = Storage(self._tempdir)
+         s.put('name').close()
++        self.assertTrue(isfile(join(self._tempdir, 'name')))
+         s.delete('name')
+-        # delete also removes versions.
+-        oldrev, newrev = s.put('name').close()
+-        self.assertEquals(0, oldrev)
+-        self.assertEquals(1, newrev)
++        self.assertFalse(isfile(join(self._tempdir, 'name')))
+ 
+     def testDeleteStorage(self):
+-        s = Storage(self._tempdir, revisionControl=True)
++        s = Storage(self._tempdir)
+         substore = Storage()
+         substore.put('name').close()
+         s.put('sub', substore)
+diff --unidirectional-new-file --recursive --unified --exclude='*.so' --exclude='*.o' --exclude=.svn --exclude='*.pyc' --exclude=deps.d --exclude=applied version_0/testsetup.sh version_1/testsetup.sh
+--- version_0/testsetup.sh	2011-12-16 16:08:56.000000000 +0100
++++ version_1/testsetup.sh	2011-12-17 00:09:36.000000000 +0100
+@@ -1,3 +1,28 @@
++## begin license ##
++# 
++# "Storage" stores data in a reliable, extendable filebased storage
++# with great performance. 
++# 
++# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
++# 
++# This file is part of "Storage"
++# 
++# "Storage" is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++# 
++# "Storage" is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with "Storage"; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# 
++## end license ##
++
+ set -e
+ 
+ rm -rf tmp build
+@@ -9,7 +34,7 @@
+ 
+ (
+ cd tmp/test
+-./alltests.sh
++./alltests.sh --$(pyversions --default)
+ )
+ 
+ rm -rf tmp build
