@@ -33,26 +33,11 @@ from shutil import rmtree
 import re
 from random import choice
 
+from escaping import escapeFilename, unescapeFilename
+
+
 defaultTempdir = gettempdir()
-BAD_CHARS = map(chr, range(32)) + ['/', '%', ',']
-FIND_BAD_CHARS = re.compile('(^\.|' + '|'.join(BAD_CHARS)+')')
-CHAR_TO_HEX = lambda x: '%%%02X' % ord(x.group(1))
 
-HEX_TO_CHAR = lambda x:chr(int(x.group(1),16))
-REVERSE_BAD_CHARS = re.compile('%([0-9A-F]{2})')
-
-BAD_BASH_CHARS = ['!','@','$','&','<','>', '|', '(',')',';', '*', '`', '\'', '"', '\\', ' ']
-
-CHARS_FOR_RANDOM = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890'
-
-def escapeName(name):
-    return FIND_BAD_CHARS.sub(CHAR_TO_HEX, name)
-
-def unescapeName(name):
-    return REVERSE_BAD_CHARS.sub(HEX_TO_CHAR, name)
-
-def bashEscape(name):
-    return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
 
 class Storage(object):
     def __init__(self, basedir=None, tempdir=defaultTempdir, checkExists=True):
@@ -64,7 +49,7 @@ class Storage(object):
             self._own = False
             if checkExists:
                 isdir(self._basedir) or makedirs(self._basedir)
-        self.name = unescapeName(basename(self._basedir))
+        self.name = unescapeFilename(basename(self._basedir))
 
     def __del__(self):
         if self._own:
@@ -83,12 +68,12 @@ class Storage(object):
         rename(self._basedir, path)
         self._basedir = path
         self._own = False
-        self.name = unescapeName(basename(self._basedir))
+        self.name = unescapeFilename(basename(self._basedir))
 
     def put(self, name, aStorage = None):
         if not name:
             raise KeyError('Empty name')
-        path = join(self._basedir, escapeName(name))
+        path = join(self._basedir, escapeFilename(name))
         try:
             if aStorage:
                 aStorage._transferOwnership(path)
@@ -107,7 +92,7 @@ class Storage(object):
     def get(self, name):
         if not name:
             raise KeyError('Empty name')
-        path = join(self._basedir, escapeName(name))
+        path = join(self._basedir, escapeFilename(name))
         if isdir(path):
             return Storage(path)
         elif isfile(path):
@@ -117,21 +102,21 @@ class Storage(object):
     def getStorage(self, name):
         if not name:
             raise KeyError('Empty name')
-        path = join(self._basedir, escapeName(name))
+        path = join(self._basedir, escapeFilename(name))
         return Storage(path, checkExists=False)
 
     def getFile(self, name):
         if not name:
             raise KeyError('Empty name')
-        path = join(self._basedir, escapeName(name))
+        path = join(self._basedir, escapeFilename(name))
         return File(path)
 
     def __contains__(self, name):
-        path = join(self._basedir, escapeName(name))
+        path = join(self._basedir, escapeFilename(name))
         return isfile(path) or isdir(path)
 
     def delete(self, name):
-        path = join(self._basedir, escapeName(name))
+        path = join(self._basedir, escapeFilename(name))
         try:
             if isdir(path):
                 rmtree(path)
@@ -144,7 +129,7 @@ class Storage(object):
 
     def __iter__(self):
         for item in listdir(self._basedir):
-            yield self.get(unescapeName(item))
+            yield self.get(unescapeFilename(item))
 
 class Sink(object):
     def __init__(self, path):
@@ -164,7 +149,7 @@ class Sink(object):
 class File(object):
     def __init__(self, path):
         self.path = path
-        self.name = unescapeName(basename(path))
+        self.name = unescapeFilename(basename(path))
         self.__file = None
 
     def _file(self):
@@ -181,3 +166,7 @@ class File(object):
         while x:
             yield x
             x = f.read(4096)
+
+
+CHARS_FOR_RANDOM = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890'
+
