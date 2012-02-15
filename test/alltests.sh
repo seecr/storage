@@ -4,7 +4,7 @@
 # "Storage" stores data in a reliable, extendable filebased storage
 # with great performance. 
 # 
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Storage"
 # 
@@ -27,14 +27,6 @@
 export LANG=en_US.UTF-8
 export PYTHONPATH=.:"$PYTHONPATH"
 option=$1
-pyversions="$(pyversions --installed)"
-if [ "${option:0:10}" == "--python2." ]; then
-    shift
-    pyversions="${option:2}"
-fi
-for pycmd in $pyversions; do
-    echo "================ $pycmd _alltests.py $@ ================"
-    $pycmd _alltests.py "$@"
-done
+python2.6 _alltests.py "$@"
 
 

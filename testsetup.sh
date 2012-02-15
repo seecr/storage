@@ -3,7 +3,7 @@
 # "Storage" stores data in a reliable, extendable filebased storage
 # with great performance. 
 # 
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
 # 
 # This file is part of "Storage"
 # 
@@ -27,14 +27,20 @@ set -e
 
 rm -rf tmp build
 
-python setup.py install --root tmp
+python2.6 setup.py install --root tmp
 
-export PYTHONPATH=$(find `pwd` -name '*-packages' -print)
+if [ -f /etc/debian_version ]; then
+    SITE_PACKAGE_DIR=`pwd`/tmp/usr/local/lib/python2.6/dist-packages
+else
+    SITE_PACKAGE_DIR=`pwd`/tmp/usr/lib/python2.6/site-packages
+fi
+
+export PYTHONPATH=${SITE_PACKAGE_DIR}:${PYTHONPATH}
 cp -r test tmp/test
 
 (
 cd tmp/test
-./alltests.sh --$(pyversions --default)
+./alltests.sh
 )
 
 rm -rf tmp build
