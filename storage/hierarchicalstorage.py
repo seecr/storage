@@ -25,7 +25,7 @@
 # 
 ## end license ##
 
-from storage import File
+from storage import File, DirectoryNotEmptyError
 
 def catchKeyError(message, aMethod):
     def wrapper(self, name):
@@ -89,6 +89,19 @@ class HierarchicalStorage(object):
         for storeName in splitted[:-1]:
             store = store.get(storeName)
         store.delete(splitted[-1])
+
+    @catchDoesNotExistError
+    def purge(self, name):
+        splitted = self._split(name)
+        stores = []
+        stores.append(self._storage)
+        for storeName in splitted[:-1]:
+            stores.append(stores[-1].get(storeName))
+        for i, storeName in enumerate(reversed(splitted)):
+            try:
+                stores[-i-1].purge(storeName)
+            except DirectoryNotEmptyError:
+                break
 
     def __contains__(self, name):
         try:

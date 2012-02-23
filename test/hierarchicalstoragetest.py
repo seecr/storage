@@ -161,6 +161,49 @@ class HierarchicalStorageTest(TestCase):
         self.assertTrue(('sub','name') in f)
         f.delete(('sub','name'))
         self.assertFalse(('sub','name') in f)
+        self.assertTrue(('sub',) in f)
+
+    def testPurgeFile(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s)
+        f.put('name').close()
+        self.assertTrue('name' in f)
+        f.purge('name')
+        self.assertFalse('name' in f)
+
+    def testPurgeSplittedFileWithDirectory(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s, split= lambda x: x)
+        f.put(('sub', '00', 'ca', 'name')).close()
+        self.assertTrue(('sub', '00', 'ca', 'name') in f)
+        f.purge(('sub', '00', 'ca', 'name'))
+        self.assertFalse(('sub', '00', 'ca', 'name') in f)
+        self.assertFalse(('sub', '00', 'ca') in f)
+        self.assertFalse(('sub', '00') in f)
+        self.assertFalse(('sub',) in f)
+
+    def testPurgeSplittedFileWithOnlyEmptyDirectories(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s, split= lambda x: x)
+        f.put(('sub', '00', 'ca', 'name')).close()
+        f.put(('sub', '01', 'ca', 'name')).close()
+        self.assertTrue(('sub', '00', 'ca', 'name') in f)
+        self.assertTrue(('sub', '01', 'ca', 'name') in f)
+        f.purge(('sub', '00', 'ca', 'name'))
+        self.assertFalse(('sub', '00', 'ca', 'name') in f)
+        self.assertFalse(('sub', '00', 'ca') in f)
+        self.assertFalse(('sub', '00') in f)
+        self.assertTrue(('sub',) in f)
+        self.assertTrue(('sub', '01', 'ca', 'name') in f)
+
+    def testPurgeNonExistingFile(self):
+        s = Storage(self._tempdir)
+        f = HierarchicalStorage(s)
+        try:
+            sink = f.purge('nonExisting')
+            self.fail()
+        except HierarchicalStorageError, e:
+            self.assertEquals("Name 'nonExisting' does not exist.", str(e))
 
     def testNonStringNamesShowUpCorrectInError(self):
         s = Storage(self._tempdir)

@@ -24,7 +24,7 @@
 ## end license ##
 
 from os.path import join, isdir, basename, isfile
-from os import makedirs, rename, remove, listdir
+from os import makedirs, rename, remove, listdir, rmdir
 from subprocess import Popen, PIPE
 from tempfile import gettempdir
 from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
@@ -52,6 +52,11 @@ def unescapeName(name):
 
 def bashEscape(name):
     return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
+
+
+class DirectoryNotEmptyError(Exception):
+    pass
+
 
 class Storage(object):
     def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir, checkExists=True):
@@ -136,6 +141,24 @@ class Storage(object):
         try:
             if isdir(path):
                 rmtree(path)
+            else:
+                remove(path)
+                self._revisionControl and remove(path + ',v')
+        except OSError, e:
+            if e.errno == ENOENT:
+                raise KeyError(name)
+            raise
+
+    def purge(self, name):
+        path = join(self._basedir, escapeName(name))
+        try:
+            if isdir(path):
+                try:
+                    rmdir(path)
+                except OSError, e:
+                    if e.errno == ENOTEMPTY:
+                        raise DirectoryNotEmptyError(name)
+                    raise
             else:
                 remove(path)
                 self._revisionControl and remove(path + ',v')
