@@ -1,0 +1,297 @@
+Changeset created on Mon Feb 27 09:57:27 UTC 2012 by Seecr (Seek You Too B.V.)
+
+Description: added purging of records
+
+    Additional functionality on top of delete is removing empty directories up to
+    the storage basedir.
+
+Baseline version: svn+ssh://svn@svn.cq2.org/svn/storage/workingsets/5.1.11-Edurep/version_0
+
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/storage/hierarchicalstorage.py /home/hendrik/development/svn/storage/workingsets/5.1.11-Edurep/version_1/storage/hierarchicalstorage.py
+--- version_0/storage/hierarchicalstorage.py	2012-02-23 11:52:55.000000000 +0100
++++ version_1/storage/hierarchicalstorage.py	2012-02-27 10:57:01.000000000 +0100
+@@ -5,7 +5,8 @@
+ # with great performance. 
+ # 
+ # Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
++# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
++# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
+ # 
+ # This file is part of "Storage"
+ # 
+@@ -25,7 +26,7 @@
+ # 
+ ## end license ##
+ 
+-from storage import File
++from storage import File, DirectoryNotEmptyError
+ 
+ def catchKeyError(message, aMethod):
+     def wrapper(self, name):
+@@ -90,6 +91,19 @@
+             store = store.get(storeName)
+         store.delete(splitted[-1])
+ 
++    @catchDoesNotExistError
++    def purge(self, name):
++        splitted = self._split(name)
++        stores = []
++        stores.append(self._storage)
++        for storeName in splitted[:-1]:
++            stores.append(stores[-1].get(storeName))
++        for i, storeName in enumerate(reversed(splitted)):
++            try:
++                stores[-i-1].purge(storeName)
++            except DirectoryNotEmptyError:
++                break
++
+     def __contains__(self, name):
+         try:
+             self.get(name)
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/storage/storage.py /home/hendrik/development/svn/storage/workingsets/5.1.11-Edurep/version_1/storage/storage.py
+--- version_0/storage/storage.py	2012-02-23 11:52:55.000000000 +0100
++++ version_1/storage/storage.py	2012-02-27 10:57:01.000000000 +0100
+@@ -1,30 +1,33 @@
+ # -*- coding: utf-8 -*-
+ ## begin license ##
+-#
+-#    Storage stores data in a reliable, extendable filebased storage
+-#    with great performance.
+-#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+-#
+-#    This file is part of Storage.
+-#
+-#    Storage is free software; you can redistribute it and/or modify
+-#    it under the terms of the GNU General Public License as published by
+-#    the Free Software Foundation; either version 2 of the License, or
+-#    (at your option) any later version.
+-#
+-#    Storage is distributed in the hope that it will be useful,
+-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#    GNU General Public License for more details.
+-#
+-#    You should have received a copy of the GNU General Public License
+-#    along with Storage; if not, write to the Free Software
+-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
++# 
++# "Storage" stores data in a reliable, extendable filebased storage
++# with great performance. 
++# 
++# Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
++# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
++# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
++# 
++# This file is part of "Storage"
++# 
++# "Storage" is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++# 
++# "Storage" is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with "Storage"; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# 
+ ## end license ##
+ 
+ from os.path import join, isdir, basename, isfile
+-from os import makedirs, rename, remove, listdir
++from os import makedirs, rename, remove, listdir, rmdir
+ from subprocess import Popen, PIPE
+ from tempfile import gettempdir
+ from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
+@@ -53,6 +56,11 @@
+ def bashEscape(name):
+     return ''.join((char in BAD_BASH_CHARS and '\\' + char or char for char in name))
+ 
++
++class DirectoryNotEmptyError(Exception):
++    pass
++
++
+ class Storage(object):
+     def __init__(self, basedir=None, revisionControl=False, tempdir=defaultTempdir, checkExists=True):
+         if not basedir:
+@@ -139,6 +147,24 @@
+             else:
+                 remove(path)
+                 self._revisionControl and remove(path + ',v')
++        except OSError, e:
++            if e.errno == ENOENT:
++                raise KeyError(name)
++            raise
++
++    def purge(self, name):
++        path = join(self._basedir, escapeName(name))
++        try:
++            if isdir(path):
++                try:
++                    rmdir(path)
++                except OSError, e:
++                    if e.errno == ENOTEMPTY:
++                        raise DirectoryNotEmptyError(name)
++                    raise
++            else:
++                remove(path)
++                self._revisionControl and remove(path + ',v')
+         except OSError, e:
+             if e.errno == ENOENT:
+                 raise KeyError(name)
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/hierarchicalstoragetest.py /home/hendrik/development/svn/storage/workingsets/5.1.11-Edurep/version_1/test/hierarchicalstoragetest.py
+--- version_0/test/hierarchicalstoragetest.py	2012-02-23 11:52:55.000000000 +0100
++++ version_1/test/hierarchicalstoragetest.py	2012-02-27 10:57:01.000000000 +0100
+@@ -4,7 +4,8 @@
+ # with great performance. 
+ # 
+ # Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
++# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
++# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
+ # 
+ # This file is part of "Storage"
+ # 
+@@ -161,6 +162,49 @@
+         self.assertTrue(('sub','name') in f)
+         f.delete(('sub','name'))
+         self.assertFalse(('sub','name') in f)
++        self.assertTrue(('sub',) in f)
++
++    def testPurgeFile(self):
++        s = Storage(self._tempdir)
++        f = HierarchicalStorage(s)
++        f.put('name').close()
++        self.assertTrue('name' in f)
++        f.purge('name')
++        self.assertFalse('name' in f)
++
++    def testPurgeSplittedFileWithDirectory(self):
++        s = Storage(self._tempdir)
++        f = HierarchicalStorage(s, split= lambda x: x)
++        f.put(('sub', '00', 'ca', 'name')).close()
++        self.assertTrue(('sub', '00', 'ca', 'name') in f)
++        f.purge(('sub', '00', 'ca', 'name'))
++        self.assertFalse(('sub', '00', 'ca', 'name') in f)
++        self.assertFalse(('sub', '00', 'ca') in f)
++        self.assertFalse(('sub', '00') in f)
++        self.assertFalse(('sub',) in f)
++
++    def testPurgeSplittedFileWithOnlyEmptyDirectories(self):
++        s = Storage(self._tempdir)
++        f = HierarchicalStorage(s, split= lambda x: x)
++        f.put(('sub', '00', 'ca', 'name')).close()
++        f.put(('sub', '01', 'ca', 'name')).close()
++        self.assertTrue(('sub', '00', 'ca', 'name') in f)
++        self.assertTrue(('sub', '01', 'ca', 'name') in f)
++        f.purge(('sub', '00', 'ca', 'name'))
++        self.assertFalse(('sub', '00', 'ca', 'name') in f)
++        self.assertFalse(('sub', '00', 'ca') in f)
++        self.assertFalse(('sub', '00') in f)
++        self.assertTrue(('sub',) in f)
++        self.assertTrue(('sub', '01', 'ca', 'name') in f)
++
++    def testPurgeNonExistingFile(self):
++        s = Storage(self._tempdir)
++        f = HierarchicalStorage(s)
++        try:
++            sink = f.purge('nonExisting')
++            self.fail()
++        except HierarchicalStorageError, e:
++            self.assertEquals("Name 'nonExisting' does not exist.", str(e))
+ 
+     def testNonStringNamesShowUpCorrectInError(self):
+         s = Storage(self._tempdir)
+diff --unidirectional-new-file --recursive --unified '--exclude=*.so' '--exclude=*.o' '--exclude=.svn' '--exclude=*.pyc' '--exclude=deps.d' '--exclude=applied' version_0/test/storagetest.py /home/hendrik/development/svn/storage/workingsets/5.1.11-Edurep/version_1/test/storagetest.py
+--- version_0/test/storagetest.py	2012-02-23 11:52:55.000000000 +0100
++++ version_1/test/storagetest.py	2012-02-27 10:57:01.000000000 +0100
+@@ -1,32 +1,36 @@
+ # -*- encoding: UTF-8
+ ## begin license ##
+-#
+-#    Storage stores data in a reliable, extendable filebased storage
+-#    with great performance.
+-#    Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
+-#
+-#    This file is part of Storage.
+-#
+-#    Storage is free software; you can redistribute it and/or modify
+-#    it under the terms of the GNU General Public License as published by
+-#    the Free Software Foundation; either version 2 of the License, or
+-#    (at your option) any later version.
+-#
+-#    Storage is distributed in the hope that it will be useful,
+-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#    GNU General Public License for more details.
+-#
+-#    You should have received a copy of the GNU General Public License
+-#    along with Storage; if not, write to the Free Software
+-#    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
++# 
++# "Storage" stores data in a reliable, extendable filebased storage
++# with great performance. 
++# 
++# Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
++# Copyright (C) 2012 Seecr (Seek You Too B.V.) http://seecr.nl
++# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
++# 
++# This file is part of "Storage"
++# 
++# "Storage" is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++# 
++# "Storage" is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with "Storage"; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++# 
+ ## end license ##
+ 
+ 
+ from unittest import TestCase
+ 
+ from storage import Storage
++from storage.storage import DirectoryNotEmptyError 
+ from tempfile import mkdtemp
+ from shutil import rmtree
+ from os.path import join, isdir, isfile
+@@ -321,6 +325,25 @@
+         except KeyError, e:
+             self.assertEquals("'name'", str(e))
+ 
++    def testPurgeStorage(self):
++        s = Storage(self._tempdir)
++        substore = Storage()
++        substore.put('name').close()
++        s.put('sub', substore)
++        self.assertRaises(DirectoryNotEmptyError, lambda: s.purge('sub'))
++        self.assertTrue(isdir(join(self._tempdir, 'sub')))
++
++        substore.purge('name')
++        s.purge('sub')
++        self.assertFalse(isdir(join(self._tempdir, 'sub')))
++
++    def testPurgeNonExisting(self):
++        try:
++            s = Storage()
++            s.purge('sub')
++        except KeyError, e:
++            self.assertEquals("'sub'", str(e))
++
+     def testEnumerateEmptyThing(self):
+         s = Storage(self._tempdir, )
+         self.assertEquals([], list(s))
