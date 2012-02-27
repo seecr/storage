@@ -4,7 +4,8 @@
 # with great performance. 
 # 
 # Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
-# Copyright (C) 2011 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012 Stichting Kennisnet http://www.kennisnet.nl
 # 
 # This file is part of "Storage"
 # 
