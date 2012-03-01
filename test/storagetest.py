@@ -29,6 +29,7 @@
 from unittest import TestCase
 
 from storage import Storage
+from storage.storage import DirectoryNotEmptyError 
 from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import join, isdir, isfile
@@ -256,6 +257,25 @@ class StorageTest(TestCase):
             self.fail()
         except KeyError, e:
             self.assertEquals("'name'", str(e))
+
+    def testPurgeStorage(self):
+        s = Storage(self._tempdir)
+        substore = Storage()
+        substore.put('name').close()
+        s.put('sub', substore)
+        self.assertRaises(DirectoryNotEmptyError, lambda: s.purge('sub'))
+        self.assertTrue(isdir(join(self._tempdir, 'sub')))
+
+        substore.purge('name')
+        s.purge('sub')
+        self.assertFalse(isdir(join(self._tempdir, 'sub')))
+
+    def testPurgeNonExisting(self):
+        try:
+            s = Storage()
+            s.purge('sub')
+        except KeyError, e:
+            self.assertEquals("'sub'", str(e))
 
     def testEnumerateEmptyThing(self):
         s = Storage(self._tempdir, )

@@ -26,7 +26,7 @@
 ## end license ##
 
 from os.path import join, isdir, basename, isfile
-from os import makedirs, rename, remove, listdir
+from os import makedirs, rename, remove, listdir, rmdir
 from tempfile import gettempdir
 from errno import ENAMETOOLONG, EINVAL, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY
 from shutil import rmtree
@@ -37,6 +37,11 @@ from escaping import escapeFilename, unescapeFilename
 
 
 defaultTempdir = gettempdir()
+
+
+
+class DirectoryNotEmptyError(Exception):
+    pass
 
 
 class Storage(object):
@@ -126,7 +131,24 @@ class Storage(object):
             if e.errno == ENOENT:
                 raise KeyError(name)
             raise
-
+    
+    def purge(self, name):
+        path = join(self._basedir, escapeFilename(name))
+        try:
+            if isdir(path):
+                try:
+                    rmdir(path)
+                except OSError, e:
+                    if e.errno == ENOTEMPTY:
+                        raise DirectoryNotEmptyError(name)
+                    raise
+            else:
+                remove(path)
+        except OSError, e:
+            if e.errno == ENOENT:
+                raise KeyError(name)
+            raise
+                
     def __iter__(self):
         for item in listdir(self._basedir):
             yield self.get(unescapeFilename(item))
