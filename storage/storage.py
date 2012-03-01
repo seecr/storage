@@ -144,6 +144,14 @@ class Storage(object):
                 raise KeyError(name)
             raise
 
+    def purge(self, name):
+        path = join(self._basedir, escapeName(name))
+        if isdir(path):
+            rmdir(path)
+        else:
+            remove(path)
+            self._revisionControl and remove(path + ',v')
+
     def __iter__(self):
         for item in listdir(self._basedir):
             if not item.endswith(',v'):
