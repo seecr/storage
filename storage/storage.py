@@ -85,7 +85,7 @@ class Storage(object):
                 return aStorage
             else:
                 return Sink(path)
-        except (OSError,IOError), e:
+        except (OSError,IOError) as e:
             if e.errno == ENAMETOOLONG:
                 raise KeyError('Name too long: ' + name)
             elif e.errno == EINVAL:
@@ -127,7 +127,7 @@ class Storage(object):
                 rmtree(path)
             else:
                 remove(path)
-        except OSError, e:
+        except OSError as e:
             if e.errno == ENOENT:
                 raise KeyError(name)
             raise
@@ -138,13 +138,13 @@ class Storage(object):
             if isdir(path):
                 try:
                     rmdir(path)
-                except OSError, e:
+                except OSError as e:
                     if e.errno == ENOTEMPTY:
                         raise DirectoryNotEmptyError(name)
                     raise
             else:
                 remove(path)
-        except OSError, e:
+        except OSError as e:
             if e.errno == ENOENT:
                 raise KeyError(name)
             raise

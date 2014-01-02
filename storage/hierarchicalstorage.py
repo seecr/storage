@@ -25,7 +25,7 @@
 # 
 ## end license ##
 
-from storage import File, DirectoryNotEmptyError
+from .storage import File, DirectoryNotEmptyError
 
 def catchKeyError(message, aMethod):
     def wrapper(self, name):
@@ -39,7 +39,7 @@ def catchPutKeyError(message, aMethod):
     def wrapper(self, name):
         try:
             return aMethod(self, name)
-        except KeyError, e:
+        except KeyError as e:
             raise HierarchicalStorageError("%s %s" % (message % repr(name), str(e)))
     return wrapper
 

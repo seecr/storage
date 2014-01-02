@@ -25,5 +25,5 @@
 ## end license ##
 
 
-from storage import Storage
-from hierarchicalstorage import HierarchicalStorage, HierarchicalStorageError
+from .storage import Storage
+from .hierarchicalstorage import HierarchicalStorage, HierarchicalStorageError

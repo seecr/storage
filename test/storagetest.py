@@ -73,7 +73,7 @@ class StorageTest(TestCase):
         sink.close()
         self.assertTrue('mydata' in s)
         stream = s.get('mydata')
-        self.assertEquals('some data of mine', stream.next())
+        self.assertEquals('some data of mine', next(stream))
 
     def testGetNotExistingData(self):
         s = Storage(self._tempdir)
@@ -81,7 +81,7 @@ class StorageTest(TestCase):
         try:
             s.get('name')
             self.fail()
-        except KeyError, k:
+        except KeyError as k:
             self.assertEquals("'name'", str(k))
 
     def testGetAllData(self):
@@ -105,9 +105,9 @@ class StorageTest(TestCase):
 
         newStorage = s2.put('s1', s1)
 
-        self.assertEquals('data', s2.get('s1').get('mydata').next())
-        self.assertEquals('data', s1.get('mydata').next())
-        self.assertEquals('data', newStorage.get('mydata').next())
+        self.assertEquals('data', next(s2.get('s1').get('mydata')))
+        self.assertEquals('data', next(s1.get('mydata')))
+        self.assertEquals('data', next(newStorage.get('mydata')))
 
     def testPutStorageChangesName(self):
         s1 = Storage(join(self._tempdir, 'basedir1'))
@@ -130,7 +130,7 @@ class StorageTest(TestCase):
         try:
             s.put('name')
             self.fail()
-        except KeyError, e:
+        except KeyError as e:
             self.assertEquals("'Key already exists: name'", str(e))
 
     def testPutStorageOverAFileFails(self):
@@ -139,7 +139,7 @@ class StorageTest(TestCase):
         try:
             s.put('name', Storage())
             self.fail()
-        except KeyError, e:
+        except KeyError as e:
             self.assertEquals("'Key already exists: name'", str(e))
 
     def testPutStorageOverEmptyStorage(self):
@@ -153,7 +153,7 @@ class StorageTest(TestCase):
         try:
             s.put('name', Storage())
             self.fail()
-        except KeyError, e:
+        except KeyError as e:
             self.assertEquals("'Key already exists: name'", str(e))
 
     def testCreateTempStorage(self):
@@ -163,7 +163,7 @@ class StorageTest(TestCase):
         sink.send('data')
         sink.close()
         s.put('mystore', stemp)
-        self.assertEquals('data', s.get('mystore').get('mydata').next())
+        self.assertEquals('data', next(s.get('mystore').get('mydata')))
 
     def testStrangeCharactersInName(self):
         self.assertName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
@@ -176,14 +176,14 @@ class StorageTest(TestCase):
         sink = s.put(name)
         sink.send('data')
         sink.close()
-        self.assertEquals('data', s.get(name).next())
+        self.assertEquals('data', next(s.get(name)))
 
     def testNameTooLong(self):
         s = Storage()
         try:
             s.put('long'*200)
             self.fail()
-        except KeyError, e:
+        except KeyError as e:
             self.assertEquals("'Name too long: " + "long" * 200 + "'", str(e))
 
     def testEmptyName(self):
@@ -191,7 +191,7 @@ class StorageTest(TestCase):
         try:
             s.put('')
             self.fail()
-        except KeyError, e:
+        except KeyError as e:
             self.assertEquals("'Empty name'", str(e))
 
     def testEmptyNameStorage(self):
@@ -199,7 +199,7 @@ class StorageTest(TestCase):
         try:
             s.put('', Storage())
             self.fail()
-        except KeyError, e:
+        except KeyError as e:
             self.assertEquals("'Empty name'", str(e))
 
     def testNameTooLongForStorage(self):
@@ -208,7 +208,7 @@ class StorageTest(TestCase):
         try:
             s.put('long'*200, s2)
             self.fail()
-        except KeyError, e:
+        except KeyError as e:
             self.assertEquals("'Name too long: " + "long" * 200 + "'", str(e))
 
     def testPutStorageInSameStorage(self):
@@ -217,7 +217,7 @@ class StorageTest(TestCase):
         try:
             s1.put('other', s2)
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEquals("Cannot put Storage inside itself.", str(e))
 
     def testPutStorageInOtherStorage(self):
@@ -227,7 +227,7 @@ class StorageTest(TestCase):
         try:
             s2.put('subsub', s1)
             self.fail()
-        except ValueError, e:
+        except ValueError as e:
             self.assertEquals("Cannot put Storage inside itself.", str(e))
 
     def testDefaultsToNoRevisionControl(self):
@@ -255,7 +255,7 @@ class StorageTest(TestCase):
             s = Storage()
             s.delete('name')
             self.fail()
-        except KeyError, e:
+        except KeyError as e:
             self.assertEquals("'name'", str(e))
 
     def testPurgeStorage(self):
@@ -274,7 +274,7 @@ class StorageTest(TestCase):
         try:
             s = Storage()
             s.purge('sub')
-        except KeyError, e:
+        except KeyError as e:
             self.assertEquals("'sub'", str(e))
 
     def testEnumerateEmptyThing(self):
