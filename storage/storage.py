@@ -131,7 +131,7 @@ class Storage(object):
             if e.errno == ENOENT:
                 raise KeyError(name)
             raise
-    
+
     def purge(self, name):
         path = join(self._basedir, escapeFilename(name))
         try:
@@ -148,7 +148,7 @@ class Storage(object):
             if e.errno == ENOENT:
                 raise KeyError(name)
             raise
-                
+
     def __iter__(self):
         for item in listdir(self._basedir):
             yield self.get(unescapeFilename(item))
@@ -183,12 +183,13 @@ class File(object):
         return getattr(self._file(), attr)
 
     def __iter__(self):
-        f = self._file()
-        x = f.read(4096)
-        while x:
-            yield x
-            x = f.read(4096)
+        return self
 
+    def __next__(self):
+        data = self._file().read(4096)
+        if not data:
+            raise StopIteration
+        return data
 
 CHARS_FOR_RANDOM = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890'
 
