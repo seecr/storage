@@ -188,8 +188,12 @@ class File(object):
     def __next__(self):
         data = self._file().read(4096)
         if not data:
+            self.close()
             raise StopIteration
         return data
+
+    def close(self):
+        self.__file.close()
 
 CHARS_FOR_RANDOM = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890'
 
