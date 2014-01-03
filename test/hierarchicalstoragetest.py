@@ -45,7 +45,7 @@ class HierarchicalStorageTest(TestCase):
         sink = f.put('name')
         sink.send('somedata')
         sink.close()
-        self.assertEquals('somedata', next(s.get('name')))
+        self.assertEqual('somedata', ''.join(s.get('name')))
 
     def testPutStorageNotAllowed(self):
         f = HierarchicalStorage(Storage(self._tempdir))
@@ -62,7 +62,7 @@ class HierarchicalStorageTest(TestCase):
         sink.close()
 
         f = HierarchicalStorage(s)
-        self.assertEquals('somedata', next(f.get('name')))
+        self.assertEqual('somedata', ''.join(f.get('name')))
 
     def testPutWithSplitMethod(self):
         s = Storage(self._tempdir)
@@ -70,7 +70,7 @@ class HierarchicalStorageTest(TestCase):
         sink = f.put('one.two.three')
         sink.send('data')
         sink.close()
-        self.assertEquals('data', next(s.get('one').get('two').get('three')))
+        self.assertEqual('data', ''.join(s.get('one').get('two').get('three')))
 
     def testGetWithSplitMethod(self):
         s = Storage(self._tempdir)
@@ -78,7 +78,7 @@ class HierarchicalStorageTest(TestCase):
         sink.send('data')
         sink.close()
         f = HierarchicalStorage(s, split=lambda x:x.split('.'))
-        self.assertEquals('data', next(f.get('one.two.three')))
+        self.assertEqual('data', ''.join(f.get('one.two.three')))
 
     def testPutOverAnExistingStorage(self):
         s = Storage(self._tempdir)
@@ -89,8 +89,8 @@ class HierarchicalStorageTest(TestCase):
         sink = f.put('one.two')
         sink.send('data2')
         sink.close()
-        self.assertEquals('data2', next(f.get('one.two')))
-        self.assertEquals('data3', next(f.get('one.three')))
+        self.assertEqual('data2', ''.join(f.get('one.two')))
+        self.assertEqual('data3', ''.join(f.get('one.three')))
 
     def testPutWithProblemSplit(self):
         s = Storage(self._tempdir)
@@ -99,12 +99,12 @@ class HierarchicalStorageTest(TestCase):
             sink = f.put('one..two')
             self.fail()
         except HierarchicalStorageError as e:
-            self.assertEquals("Name 'one..two' not allowed: 'Empty name'", str(e))
+            self.assertEqual("Name 'one..two' not allowed: 'Empty name'", str(e))
         try:
             sink = f.put(('one', 'two'))
             self.fail()
         except HierarchicalStorageError as e:
-            self.assertEquals("Name ('one', 'two') not allowed: 'Empty name'", str(e))
+            self.assertEqual("Name ('one', 'two') not allowed: 'Empty name'", str(e))
 
     def testGetWithProblemSplit(self):
         s = Storage(self._tempdir)
@@ -114,7 +114,7 @@ class HierarchicalStorageTest(TestCase):
             sink = f.get('one..two')
             self.fail()
         except HierarchicalStorageError as e:
-            self.assertEquals("Name 'one..two' does not exist.", str(e))
+            self.assertEqual("Name 'one..two' does not exist.", str(e))
 
     def testGetNonExisting(self):
         self.assertGetNameError('name')
@@ -127,7 +127,7 @@ class HierarchicalStorageTest(TestCase):
             sink = f.get(name)
             self.fail()
         except HierarchicalStorageError as e:
-            self.assertEquals("Name '%s' does not exist." % name, str(e))
+            self.assertEqual("Name '%s' does not exist." % name, str(e))
 
     def testExists(self):
         s = Storage(self._tempdir)
@@ -203,7 +203,7 @@ class HierarchicalStorageTest(TestCase):
             sink = f.purge('nonExisting')
             self.fail()
         except HierarchicalStorageError as e:
-            self.assertEquals("Name 'nonExisting' does not exist.", str(e))
+            self.assertEqual("Name 'nonExisting' does not exist.", str(e))
 
     def testNonStringNamesShowUpCorrectInError(self):
         s = Storage(self._tempdir)
@@ -212,7 +212,7 @@ class HierarchicalStorageTest(TestCase):
             f.get(('sub','name'))
             self.fail()
         except HierarchicalStorageError as e:
-            self.assertEquals("Name ('sub', 'name') does not exist.", str(e))
+            self.assertEqual("Name ('sub', 'name') does not exist.", str(e))
 
     def testDeleteNonExisting(self):
         s = Storage(self._tempdir)
@@ -221,7 +221,7 @@ class HierarchicalStorageTest(TestCase):
             f.delete('not here')
             self.fail()
         except HierarchicalStorageError as e:
-            self.assertEquals("Name 'not here' does not exist.", str(e))
+            self.assertEqual("Name 'not here' does not exist.", str(e))
 
     def testIter(self):
         s = Storage(self._tempdir)
@@ -229,7 +229,7 @@ class HierarchicalStorageTest(TestCase):
         f.put('some.name.0').close()
         f.put('some.name.1').close()
         l = list(f)
-        self.assertEquals(set(['some.name.0', 'some.name.1']), set(l))
+        self.assertEqual(set(['some.name.0', 'some.name.1']), set(l))
 
     def testIterWithSplit(self):
         s = Storage(self._tempdir)
@@ -238,7 +238,7 @@ class HierarchicalStorageTest(TestCase):
         f.put('left.right').close()
         f.put('left.middle.right').close()
         l = list(f)
-        self.assertEquals(set(['something', 'left.right', 'left.middle.right']), set(l))
+        self.assertEqual(set(['something', 'left.right', 'left.middle.right']), set(l))
 
     def testGlobEmptyName(self):
         s = Storage(self._tempdir)
@@ -248,7 +248,7 @@ class HierarchicalStorageTest(TestCase):
         f.put('a.c.file_two').close()
         f.put('a.d.a').close()
 
-        self.assertEquals(set(['a.b', 'a.c.file_one', 'a.c.file_two', 'a.d.a']), set(list(f.glob(''))))
+        self.assertEqual(set(['a.b', 'a.c.file_one', 'a.c.file_two', 'a.d.a']), set(list(f.glob(''))))
 
 
     def testGlobStorage(self):
@@ -259,13 +259,13 @@ class HierarchicalStorageTest(TestCase):
         f.put('a.c.file_two').close()
         f.put('a.d.a').close()
 
-        self.assertEquals(set(['a.c.file_one', 'a.c.file_two']), set(list(f.glob('a.c.file'))))
-        self.assertEquals(set(['a.b', 'a.c.file_one', 'a.c.file_two', 'a.d.a']), set(list(f.glob('a'))))
-        self.assertEquals(set(['a.b']), set(list(f.glob('a.b'))))
+        self.assertEqual(set(['a.c.file_one', 'a.c.file_two']), set(list(f.glob('a.c.file'))))
+        self.assertEqual(set(['a.b', 'a.c.file_one', 'a.c.file_two', 'a.d.a']), set(list(f.glob('a'))))
+        self.assertEqual(set(['a.b']), set(list(f.glob('a.b'))))
 
         f.put('a.c.file_three').close()
-        self.assertEquals(set(['a.c.file_one', 'a.c.file_two', 'a.c.file_three']), set(list(f.glob('a.c.file_t'))))
-        self.assertEquals(set(['a.c.file_one', 'a.c.file_two', 'a.c.file_three']), set(list(f.glob('a.c'))))
+        self.assertEqual(set(['a.c.file_one', 'a.c.file_two', 'a.c.file_three']), set(list(f.glob('a.c.file_t'))))
+        self.assertEqual(set(['a.c.file_one', 'a.c.file_two', 'a.c.file_three']), set(list(f.glob('a.c'))))
 
     def testBasePathOnDifferentDeviceThenTmp(self):
         mydir = join(getcwd(), 'justForOneTest')
@@ -286,7 +286,7 @@ class HierarchicalStorageTest(TestCase):
         a_notexist = h.getFile('a.notexist')
         a = h.getFile('a')
         notexist = h.getFile('notexist')
-        self.assertEquals('A.B', ''.join(ab))
+        self.assertEqual('A.B', ''.join(ab))
         self.assertRaises(IOError, lambda: list(a_notexist))
         self.assertRaises(IOError, lambda: list(a))
         self.assertRaises(IOError, lambda: list(notexist))
