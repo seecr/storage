@@ -34,6 +34,7 @@ from unittest import main
 
 from storagetest import StorageTest
 from hierarchicalstoragetest import HierarchicalStorageTest
+from storagecomponenttest import StorageComponentTest
 
 if __name__ == '__main__':
     main()
