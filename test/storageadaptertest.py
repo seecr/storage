@@ -31,12 +31,22 @@ from StringIO import StringIO
 
 class StorageAdapterTest(SeecrTestCase):
 
-    def testOne(self):
+    def testRetrieveData(self):
         adapter = StorageAdapter()
         observer = CallTrace(returnValues=dict(getStream=StringIO("DATA")))
         adapter.addObserver(observer)
 
         result = retval(adapter.retrieveData(identifier='id:1', name='partname'))
+        self.assertEqual('DATA', result)
+        self.assertEqual(['getStream'], observer.calledMethodNames())
+        self.assertEqual({'partname': 'partname', 'identifier': 'id:1'}, observer.calledMethods[0].kwargs)
+
+    def testGetData(self):
+        adapter = StorageAdapter()
+        observer = CallTrace(returnValues=dict(getStream=StringIO("DATA")))
+        adapter.addObserver(observer)
+
+        result = adapter.getData(identifier='id:1', name='partname')
         self.assertEqual('DATA', result)
         self.assertEqual(['getStream'], observer.calledMethodNames())
         self.assertEqual({'partname': 'partname', 'identifier': 'id:1'}, observer.calledMethods[0].kwargs)
