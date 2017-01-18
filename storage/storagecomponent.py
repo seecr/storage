@@ -100,6 +100,12 @@ class StorageComponent(object):
         if (identifier, partname) in self._storage:
             self._storage.delete((identifier, partname))
 
+    def deleteData(self, identifier, name=None):
+        names = self._partsRemovedOnDelete if name is None else [name]
+        for name in names:
+            self.deletePart(identifier, name)
+
+
     def purge(self, identifier):
         if not identifier:
             raise ValueError("Empty identifier is not allowed.")
