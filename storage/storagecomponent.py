@@ -8,7 +8,7 @@
 # Copyright (C) 2007 SURFnet. http://www.surfnet.nl
 # Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
-# Copyright (C) 2012, 2016 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012, 2016-2017 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2012 Stichting Bibliotheek.nl (BNL) http://stichting.bibliotheek.nl
 #
 # This file is part of "Storage"
@@ -74,14 +74,17 @@ class StorageComponent(object):
     def observable_name(self):
         return self._name
 
-    def add(self, identifier, partname, data):
+    def addData(self, identifier, name, data):
         if not identifier:
             raise ValueError("Empty identifier is not allowed.")
-        sink = self._storage.put((identifier, partname))
+        sink = self._storage.put((identifier, name))
         try:
             sink.send(data)
         finally:
             sink.close()
+
+    def add(self, identifier, partname, data):
+        self.addData(identifier=identifier, name=partname, data=data)
         return
         yield
 

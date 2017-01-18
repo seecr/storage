@@ -8,7 +8,7 @@
 # Copyright (C) 2007 SURFnet. http://www.surfnet.nl
 # Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
-# Copyright (C) 2011-2012, 2016 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012, 2016-2017 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2012 Stichting Bibliotheek.nl (BNL) http://stichting.bibliotheek.nl
 #
 # This file is part of "Storage"
@@ -48,6 +48,10 @@ class StorageComponentTest(SeecrTestCase):
     def testAdd(self):
         consume(self.storageComponent.add("id_0", "partName", "The contents of the part"))
         self.assertEquals('The contents of the part', self.storage.get(('id_0', 'partName')).read())
+
+    def testAddData(self):
+        self.storageComponent.addData(identifier='id_0', name='partname', data='data')
+        self.assertEqual('data', self.storageComponent.getData(identifier='id_0', name='partname'))
 
     def testAddEmptyIdentifier(self):
         self.assertRaises(ValueError, lambda: list(compose(self.storageComponent.add("", "part", "data"))))
