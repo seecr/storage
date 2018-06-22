@@ -112,13 +112,6 @@ class StorageComponentTest(SeecrTestCase):
         list(compose(self.storageComponent.delete('some:thing:anId-123')))
         self.assertFalse(identifier in self.storage)
 
-    def testDeleteData(self):
-        identifier = ('some:thing:anId-123','somePartName')
-        self.storage.put(identifier).close()
-        self.assertTrue(identifier in self.storage)
-        self.storageComponent.deleteData(identifier='some:thing:anId-123', name='somePartName')
-        self.assertFalse(identifier in self.storage)
-
     def testPurgeWithoutIdentifierNotAllowed(self):
         self.assertRaises(ValueError, lambda: StorageComponent(self.tempdir).purge(''))
 

@@ -143,14 +143,6 @@ class StorageComponent(object):
             return self.getStream(identifier=identifier, partname=name).read()
         raise KeyError(identifier)
 
-    def deleteData(self, identifier, name=None):
-        if not name is None:
-            self.deletePart(identifier, name)
-        else:
-            for name in self._partsRemovedOnDelete:
-                self.deletePart(identifier, name)
-
-
     def listIdentifiers(self, partname=None, identifierPrefix=''):
         return (identifier for identifier, ignored in self.glob((identifierPrefix, partname)))
 
