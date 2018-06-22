@@ -8,7 +8,7 @@
 # Copyright (C) 2007 SURFnet. http://www.surfnet.nl
 # Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
-# Copyright (C) 2012, 2016-2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2012, 2016-2018 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2012 Stichting Bibliotheek.nl (BNL) http://stichting.bibliotheek.nl
 #
 # This file is part of "Storage"
@@ -142,6 +142,14 @@ class StorageComponent(object):
         if self.isAvailable(identifier, name) == (True, True):
             return self.getStream(identifier=identifier, partname=name).read()
         raise KeyError(identifier)
+
+    def deleteData(self, identifier, name=None):
+        if not name is None:
+            self.deletePart(identifier, name)
+        else:
+            for name in self._partsRemovedOnDelete:
+                self.deletePart(identifier, name)
+
 
     def listIdentifiers(self, partname=None, identifierPrefix=''):
         return (identifier for identifier, ignored in self.glob((identifierPrefix, partname)))

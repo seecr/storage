@@ -8,7 +8,7 @@
 # Copyright (C) 2007 SURFnet. http://www.surfnet.nl
 # Copyright (C) 2007-2010 Seek You Too (CQ2) http://www.cq2.nl
 # Copyright (C) 2007-2009 Stichting Kennisnet Ict op school. http://www.kennisnetictopschool.nl
-# Copyright (C) 2011-2012, 2016-2017 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2012, 2016-2018 Seecr (Seek You Too B.V.) http://seecr.nl
 # Copyright (C) 2012 Stichting Bibliotheek.nl (BNL) http://stichting.bibliotheek.nl
 #
 # This file is part of "Storage"
@@ -244,3 +244,20 @@ class StorageComponentTest(SeecrTestCase):
         consume(self.storageComponent.add("id_0", "partName", "The contents of the part"))
         self.assertEquals('The contents of the part', self.storageComponent.getData(identifier='id_0', name='partName'))
         self.assertRaises(KeyError, lambda: self.storageComponent.getData('does', 'notexist'))
+
+    def testDeleteData(self):
+        consume(self.storageComponent.add("id_0", "partName", "The contents of the part"))
+        self.assertEquals('The contents of the part', self.storageComponent.getData(identifier='id_0', name='partName'))
+        self.storageComponent.deleteData(identifier='id_0')
+        self.assertEquals('The contents of the part', self.storageComponent.getData(identifier='id_0', name='partName'))
+        self.storageComponent.deleteData(identifier='id_0', name='partName')
+        self.assertRaises(KeyError, lambda: self.storageComponent.getData('id_0', 'partName'))
+
+    def testDeleteDataWithParts(self):
+        self.storageComponent = StorageComponent(self.tempdir, partsRemovedOnDelete=['aap'])
+        self.storageComponent.addData('id_0', 'noot', 'data')
+        self.storageComponent.addData('id_0', 'aap', 'data')
+        self.storageComponent.deleteData(identifier='id_0')
+        self.assertEquals('data', self.storageComponent.getData(identifier='id_0', name='noot'))
+        self.assertRaises(KeyError, lambda: self.storageComponent.getData('id_0', 'aap'))
+
