@@ -57,7 +57,7 @@ class HashDistributeStrategy(object):
 
     def split(self, xxx_todo_changeme2):
         (identifier, partname) = xxx_todo_changeme2
-        hash = sha1(identifier).hexdigest()
+        hash = sha1(identifier.encode('utf-8')).hexdigest()
         if partname is None:
             partname = ""
         return hash[0:2], hash[2:4], hash + '.' + partname
@@ -142,7 +142,8 @@ class StorageComponent(object):
 
     def getData(self, identifier, name):
         if self.isAvailable(identifier, name) == (True, True):
-            return self.getStream(identifier=identifier, partname=name).read()
+            with self.getStream(identifier=identifier, partname=name) as stream:
+                return stream.read()
         raise KeyError(identifier)
 
     def listIdentifiers(self, partname=None, identifierPrefix=''):

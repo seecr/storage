@@ -193,13 +193,22 @@ class File(object):
                 self._nextdata = f.read(4096)
             x, self._nextdata = self._nextdata, f.read(4096)
             if not self._nextdata:
-                self._done = True
-                self._open.close()
-                self._open = None
+                self.close()
             if x:
                 return x
         raise StopIteration()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    def close(self):
+        self._done = True
+        if self._open:
+            self._open.close()
+            self._open = None
 
 CHARS_FOR_RANDOM = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890'
 

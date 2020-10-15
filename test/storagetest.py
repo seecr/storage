@@ -379,3 +379,4 @@ class StorageTest(TestCase):
         f = s.get("mydata")
         self.assertEqual("second", f.read(6))
         f.close()
+

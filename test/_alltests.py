@@ -33,7 +33,7 @@ from unittest import main
 
 from storagetest import StorageTest
 from hierarchicalstoragetest import HierarchicalStorageTest
-# from storagecomponenttest import StorageComponentTest
+from storagecomponenttest import StorageComponentTest
 # from storageadaptertest import StorageAdapterTest
 
 if __name__ == '__main__':

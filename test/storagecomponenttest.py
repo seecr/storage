@@ -47,7 +47,8 @@ class StorageComponentTest(SeecrTestCase):
 
     def testAdd(self):
         consume(self.storageComponent.add("id_0", "partName", "The contents of the part"))
-        self.assertEqual('The contents of the part', self.storage.get(('id_0', 'partName')).read())
+        with self.storage.get(('id_0', 'partName')) as f:
+            self.assertEqual('The contents of the part', f.read())
 
     def testAddData(self):
         self.storageComponent.addData(identifier='id_0', name='partname', data='data')
@@ -187,7 +188,7 @@ class StorageComponentTest(SeecrTestCase):
             join = None
         s = StorageComponent(self.tempdir, strategy=TestStrategy)
         list(compose(s.add("AnIdentifier", "Part1", "Contents")))
-        self.assertEqual("Contents", open(join(self.tempdir, "aNiDENTIFIER", "pART1")).read())
+        self.assertEqual("Contents", openread(join(self.tempdir, "aNiDENTIFIER", "pART1")))
 
     def testDirectorySplit(self):
         class TestStrategy:
@@ -198,7 +199,7 @@ class StorageComponentTest(SeecrTestCase):
             join = None
         s = StorageComponent(self.tempdir, strategy=TestStrategy)
         list(compose(s.add("id09", "Part1", "Contents")))
-        self.assertEqual("Contents", open(join(self.tempdir, "i", "d", "0", "9", "Part1")).read())
+        self.assertEqual("Contents", openread(join(self.tempdir, "i", "d", "0", "9", "Part1")))
 
     def testDirectoryStrategyJoin(self):
         class TestStrategy:
@@ -225,7 +226,7 @@ class StorageComponentTest(SeecrTestCase):
     def testDefaultStrategyIsDefaultStrategy(self):
         s = StorageComponent(self.tempdir)
         list(compose(s.add("a:b:c", "d", "Hi")))
-        self.assertEqual("Hi", open(join(self.tempdir, "a", "b:c", "d")).read())
+        self.assertEqual("Hi", openread(join(self.tempdir, "a", "b:c", "d")))
 
     def testHashDistributeStrategy(self):
         s = HashDistributeStrategy()
@@ -257,3 +258,6 @@ class StorageComponentTest(SeecrTestCase):
         self.assertEqual('data', self.storageComponent.getData(identifier='id_0', name='noot'))
         self.assertRaises(KeyError, lambda: self.storageComponent.getData('id_0', 'aap'))
 
+def openread(filename):
+    with open(filename) as f:
+        return f.read()
