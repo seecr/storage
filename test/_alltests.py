@@ -32,9 +32,9 @@ includeParentAndDeps(__file__, scanForDeps=True) #DO_NOT_DISTRIBUTE
 from unittest import main
 
 from storagetest import StorageTest
-from hierarchicalstoragetest import HierarchicalStorageTest
-from storagecomponenttest import StorageComponentTest
-from storageadaptertest import StorageAdapterTest
+# from hierarchicalstoragetest import HierarchicalStorageTest
+# from storagecomponenttest import StorageComponentTest
+# from storageadaptertest import StorageAdapterTest
 
 if __name__ == '__main__':
     main()

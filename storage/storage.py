@@ -75,7 +75,7 @@ class Storage(object):
         self._own = False
         self.name = unescapeFilename(basename(self._basedir))
 
-    def put(self, name, aStorage = None):
+    def put(self, name, aStorage=None):
         if not name:
             raise KeyError('Empty name')
         path = join(self._basedir, escapeFilename(name))
@@ -85,7 +85,7 @@ class Storage(object):
                 return aStorage
             else:
                 return Sink(path)
-        except (OSError,IOError), e:
+        except (OSError,IOError) as e:
             if e.errno == ENAMETOOLONG:
                 raise KeyError('Name too long: ' + name)
             elif e.errno == EINVAL:
@@ -127,28 +127,28 @@ class Storage(object):
                 rmtree(path)
             else:
                 remove(path)
-        except OSError, e:
+        except OSError as e:
             if e.errno == ENOENT:
                 raise KeyError(name)
             raise
-    
+
     def purge(self, name):
         path = join(self._basedir, escapeFilename(name))
         try:
             if isdir(path):
                 try:
                     rmdir(path)
-                except OSError, e:
+                except OSError as e:
                     if e.errno == ENOTEMPTY:
                         raise DirectoryNotEmptyError(name)
                     raise
             else:
                 remove(path)
-        except OSError, e:
+        except OSError as e:
             if e.errno == ENOENT:
                 raise KeyError(name)
             raise
-                
+
     def __iter__(self):
         for item in listdir(self._basedir):
             yield self.get(unescapeFilename(item))
@@ -158,6 +158,7 @@ class Sink(object):
         self._openpath = path
         if isfile(path):
             self._openpath += ',t'
+        self._fd = None
         fd = open(self._openpath, 'w')
         self.send = fd.write
         self.name = path
@@ -172,22 +173,32 @@ class File(object):
     def __init__(self, path):
         self.path = path
         self.name = unescapeFilename(basename(path))
-        self.__file = None
+        self._done, self._open, self._nextdata = False, None, None
 
-    def _file(self):
-        if self.__file == None:
-            self.__file = open(self.path)
-        return self.__file
+    def _opendata(self):
+        if self._open == None and not self._done:
+            self._open = open(self.path)
+        return self._open
 
     def __getattr__(self, attr):
-        return getattr(self._file(), attr)
+        return getattr(self._opendata(), attr)
 
     def __iter__(self):
-        f = self._file()
-        x = f.read(4096)
-        while x:
-            yield x
-            x = f.read(4096)
+        return self
+
+    def __next__(self):
+        if not self._done:
+            f = self._opendata()
+            if self._nextdata is None:
+                self._nextdata = f.read(4096)
+            x, self._nextdata = self._nextdata, f.read(4096)
+            if not self._nextdata:
+                self._done = True
+                self._open.close()
+                self._open = None
+            if x:
+                return x
+        raise StopIteration()
 
 
 CHARS_FOR_RANDOM = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890'

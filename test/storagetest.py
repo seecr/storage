@@ -1,35 +1,35 @@
 # -*- encoding: UTF-8
 ## begin license ##
-# 
+#
 # "Storage" stores data in a reliable, extendable filebased storage
-# with great performance. 
-# 
+# with great performance.
+#
 # Copyright (C) 2006-2010 Seek You Too B.V. (CQ2) http://www.cq2.nl
 # Copyright (C) 2011-2012 Seecr (Seek You Too B.V.) http://seecr.nl
-# 
+#
 # This file is part of "Storage"
-# 
+#
 # "Storage" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # "Storage" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with "Storage"; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 ## end license ##
 
 
 from unittest import TestCase
 
 from storage import Storage
-from storage.storage import DirectoryNotEmptyError 
+from storage.storage import DirectoryNotEmptyError
 from tempfile import mkdtemp
 from shutil import rmtree
 from os.path import join, isdir, isfile
@@ -54,7 +54,7 @@ class StorageTest(TestCase):
 
     def testPutEmptyFile(self):
         s = Storage(self._tempdir)
-        s.put('mydata')
+        s.put('mydata').close()
         expectedFilename = join(self._tempdir, 'mydata')
         self.assertTrue(isfile(expectedFilename))
 
@@ -64,7 +64,8 @@ class StorageTest(TestCase):
         sink.send('some data of mine')
         sink.close()
         expectedFilename = join(self._tempdir, 'mydata')
-        self.assertEquals('some data of mine', open(expectedFilename).read())
+        with open(expectedFilename) as f:
+            self.assertEqual('some data of mine', f.read())
 
     def testGetData(self):
         s = Storage(self._tempdir)
@@ -73,7 +74,7 @@ class StorageTest(TestCase):
         sink.close()
         self.assertTrue('mydata' in s)
         stream = s.get('mydata')
-        self.assertEquals('some data of mine', stream.next())
+        self.assertEqual('some data of mine', next(stream))
 
     def testGetNotExistingData(self):
         s = Storage(self._tempdir)
@@ -81,8 +82,8 @@ class StorageTest(TestCase):
         try:
             s.get('name')
             self.fail()
-        except KeyError, k:
-            self.assertEquals("'name'", str(k))
+        except KeyError as k:
+            self.assertEqual("'name'", str(k))
 
     def testGetAllData(self):
         s = Storage(self._tempdir)
@@ -94,7 +95,7 @@ class StorageTest(TestCase):
         stream = s.get('mydata')
         for block in stream:
             data.append(block)
-        self.assertEquals(['some data of minesome more data of mine'], data)
+        self.assertEqual(['some data of minesome more data of mine'], data)
 
     def testPutStorage(self):
         s1 = Storage(join(self._tempdir, 'basedir1'))
@@ -105,17 +106,17 @@ class StorageTest(TestCase):
 
         newStorage = s2.put('s1', s1)
 
-        self.assertEquals('data', s2.get('s1').get('mydata').next())
-        self.assertEquals('data', s1.get('mydata').next())
-        self.assertEquals('data', newStorage.get('mydata').next())
+        self.assertEqual('data', next(s2.get('s1').get('mydata')))
+        self.assertEqual('data', next(s1.get('mydata')))
+        self.assertEqual('data', next(newStorage.get('mydata')))
 
     def testPutStorageChangesName(self):
         s1 = Storage(join(self._tempdir, 'basedir1'))
         s2 = Storage(join(self._tempdir, 'basedir2'))
-        self.assertEquals('basedir1', s1.name)
-        self.assertEquals('basedir2', s2.name)
+        self.assertEqual('basedir1', s1.name)
+        self.assertEqual('basedir2', s2.name)
         s2.put('s1', s1)
-        self.assertEquals('s1', s1.name)
+        self.assertEqual('s1', s1.name)
 
 
     def testPutStorageAssumesOwnership(self):
@@ -130,17 +131,17 @@ class StorageTest(TestCase):
         try:
             s.put('name')
             self.fail()
-        except KeyError, e:
-            self.assertEquals("'Key already exists: name'", str(e))
+        except KeyError as e:
+            self.assertEqual("'Key already exists: name'", str(e))
 
     def testPutStorageOverAFileFails(self):
         s = Storage(self._tempdir)
-        s.put('name')
+        s.put('name').close()
         try:
             s.put('name', Storage())
             self.fail()
-        except KeyError, e:
-            self.assertEquals("'Key already exists: name'", str(e))
+        except KeyError as e:
+            self.assertEqual("'Key already exists: name'", str(e))
 
     def testPutStorageOverEmptyStorage(self):
         s = Storage(self._tempdir)
@@ -153,8 +154,8 @@ class StorageTest(TestCase):
         try:
             s.put('name', Storage())
             self.fail()
-        except KeyError, e:
-            self.assertEquals("'Key already exists: name'", str(e))
+        except KeyError as e:
+            self.assertEqual("'Key already exists: name'", str(e))
 
     def testCreateTempStorage(self):
         stemp = Storage()
@@ -163,7 +164,7 @@ class StorageTest(TestCase):
         sink.send('data')
         sink.close()
         s.put('mystore', stemp)
-        self.assertEquals('data', s.get('mystore').get('mydata').next())
+        self.assertEqual('data', next(s.get('mystore').get('mydata')))
 
     def testStrangeCharactersInName(self):
         self.assertName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
@@ -176,31 +177,31 @@ class StorageTest(TestCase):
         sink = s.put(name)
         sink.send('data')
         sink.close()
-        self.assertEquals('data', s.get(name).next())
+        self.assertEqual('data', next(s.get(name)))
 
     def testNameTooLong(self):
         s = Storage()
         try:
             s.put('long'*200)
             self.fail()
-        except KeyError, e:
-            self.assertEquals("'Name too long: " + "long" * 200 + "'", str(e))
+        except KeyError as e:
+            self.assertEqual("'Name too long: " + "long" * 200 + "'", str(e))
 
     def testEmptyName(self):
         s = Storage()
         try:
             s.put('')
             self.fail()
-        except KeyError, e:
-            self.assertEquals("'Empty name'", str(e))
+        except KeyError as e:
+            self.assertEqual("'Empty name'", str(e))
 
     def testEmptyNameStorage(self):
         s = Storage()
         try:
             s.put('', Storage())
             self.fail()
-        except KeyError, e:
-            self.assertEquals("'Empty name'", str(e))
+        except KeyError as e:
+            self.assertEqual("'Empty name'", str(e))
 
     def testNameTooLongForStorage(self):
         s = Storage()
@@ -208,8 +209,8 @@ class StorageTest(TestCase):
         try:
             s.put('long'*200, s2)
             self.fail()
-        except KeyError, e:
-            self.assertEquals("'Name too long: " + "long" * 200 + "'", str(e))
+        except KeyError as e:
+            self.assertEqual("'Name too long: " + "long" * 200 + "'", str(e))
 
     def testPutStorageInSameStorage(self):
         s1 = Storage(join(self._tempdir, 'samedir'))
@@ -217,8 +218,8 @@ class StorageTest(TestCase):
         try:
             s1.put('other', s2)
             self.fail()
-        except ValueError, e:
-            self.assertEquals("Cannot put Storage inside itself.", str(e))
+        except ValueError as e:
+            self.assertEqual("Cannot put Storage inside itself.", str(e))
 
     def testPutStorageInOtherStorage(self):
         s1 = Storage(join(self._tempdir, 'samedir'))
@@ -227,13 +228,13 @@ class StorageTest(TestCase):
         try:
             s2.put('subsub', s1)
             self.fail()
-        except ValueError, e:
-            self.assertEquals("Cannot put Storage inside itself.", str(e))
+        except ValueError as e:
+            self.assertEqual("Cannot put Storage inside itself.", str(e))
 
     def testDefaultsToNoRevisionControl(self):
         s = Storage()
         result = s.put('name').close()
-        self.assertEquals(None, result)
+        self.assertEqual(None, result)
 
     def testDeleteFile(self):
         s = Storage(self._tempdir)
@@ -255,8 +256,8 @@ class StorageTest(TestCase):
             s = Storage()
             s.delete('name')
             self.fail()
-        except KeyError, e:
-            self.assertEquals("'name'", str(e))
+        except KeyError as e:
+            self.assertEqual("'name'", str(e))
 
     def testPurgeStorage(self):
         s = Storage(self._tempdir)
@@ -274,18 +275,18 @@ class StorageTest(TestCase):
         try:
             s = Storage()
             s.purge('sub')
-        except KeyError, e:
-            self.assertEquals("'sub'", str(e))
+        except KeyError as e:
+            self.assertEqual("'sub'", str(e))
 
     def testEnumerateEmptyThing(self):
         s = Storage(self._tempdir, )
-        self.assertEquals([], list(s))
+        self.assertEqual([], list(s))
 
     def testEnumerateOneFile(self):
         s = Storage(self._tempdir)
         s.put('name').close()
         allnames = [item.name for item in s]
-        self.assertEquals(['name'], allnames)
+        self.assertEqual(['name'], allnames)
 
     def testEnumerateFilesWithStrangeNames(self):
         def create(storage, name):
@@ -310,21 +311,21 @@ class StorageTest(TestCase):
     def assertEnumerateName(self, name, create):
         s = Storage()
         create(s, name)
-        self.assertEquals([name], [item.name for item in s])
+        self.assertEqual([name], [item.name for item in s])
 
     def testEnumerateMultipleNames(self):
         s = Storage(self._tempdir)
         s.put('name').close()
         s.put('name2').close()
         allnames = [item.name for item in s]
-        self.assertEquals(set(['name', 'name2']), set(allnames))
+        self.assertEqual(set(['name', 'name2']), set(allnames))
 
     def testEnumerateWithSubstorage(self):
         s = Storage(self._tempdir)
         s.put('name').close()
         sub = Storage()
         s.put('sub', sub)
-        self.assertEquals(set(['name', 'sub']), set([item.name for item in s]))
+        self.assertEqual(set(['name', 'sub']), set([item.name for item in s]))
 
     def testEnumerationDeliversObjectReadyForWork(self):
         s = Storage(self._tempdir)
@@ -332,10 +333,10 @@ class StorageTest(TestCase):
         sink.send('data')
         sink.close()
         allitems = list(s)
-        self.assertEquals(1, len(allitems))
+        self.assertEqual(1, len(allitems))
         item1 = allitems[0]
-        self.assertEquals('name', item1.name)
-        self.assertEquals('data', ''.join(item1))
+        self.assertEqual('name', item1.name)
+        self.assertEqual('data', ''.join(item1))
 
     def testNiceNames(self):
         s = Storage(self._tempdir)
@@ -371,8 +372,10 @@ class StorageTest(TestCase):
         sink2 = s.put("mydata")
         sink2.send("second\n"*12345)
         f = s.get("mydata")
-        self.assertEquals("first", f.read(5))
+        self.assertEqual("first", f.read(5))
+        f.close()
         sink2.send("more")
         sink2.close()
         f = s.get("mydata")
-        self.assertEquals("second", f.read(6))
+        self.assertEqual("second", f.read(6))
+        f.close()

@@ -26,7 +26,7 @@
 from seecr.test import SeecrTestCase, CallTrace
 from storage.storageadapter import StorageAdapter
 from weightless.core import retval
-from StringIO import StringIO
+from io import StringIO
 
 
 class StorageAdapterTest(SeecrTestCase):

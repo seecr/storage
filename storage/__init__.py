@@ -25,6 +25,6 @@
 ## end license ##
 
 
-from storage import Storage
-from hierarchicalstorage import HierarchicalStorage, HierarchicalStorageError
-from storagecomponent import StorageComponent
+from .storage import Storage
+from .hierarchicalstorage import HierarchicalStorage, HierarchicalStorageError
+from .storagecomponent import StorageComponent
