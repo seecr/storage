@@ -182,8 +182,8 @@ class StorageComponentTest(SeecrTestCase):
     def testDirectoryStrategy(self):
         class TestStrategy:
             @classmethod
-            def split(self, xxx_todo_changeme):
-                (identifier, partname) = xxx_todo_changeme
+            def split(self, identifier_partname):
+                (identifier, partname) = identifier_partname
                 return identifier.swapcase(), partname.swapcase()
             join = None
         s = StorageComponent(self.tempdir, strategy=TestStrategy)
@@ -193,8 +193,8 @@ class StorageComponentTest(SeecrTestCase):
     def testDirectorySplit(self):
         class TestStrategy:
             @classmethod
-            def split(self, xxx_todo_changeme1):
-                (identifier, partname) = xxx_todo_changeme1
+            def split(self, identifier_partname):
+                (identifier, partname) = identifier_partname
                 return tuple(c for c in identifier) + (partname,)
             join = None
         s = StorageComponent(self.tempdir, strategy=TestStrategy)
@@ -204,8 +204,8 @@ class StorageComponentTest(SeecrTestCase):
     def testDirectoryStrategyJoin(self):
         class TestStrategy:
             @classmethod
-            def split(self, xxx_todo_changeme2):
-                (identifier, partname) = xxx_todo_changeme2
+            def split(self, identifier_partname):
+                (identifier, partname) = identifier_partname
                 result = tuple(c for c in identifier)
                 return result if not partname else result + (partname,)
             @classmethod

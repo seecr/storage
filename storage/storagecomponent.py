@@ -37,8 +37,8 @@ from .storage import Storage
 class DefaultStrategy(object):
 
     @classmethod
-    def split(self, xxx_todo_changeme1):
-        (identifier, partname) = xxx_todo_changeme1
+    def split(self, identifier_partname):
+        (identifier, partname) = identifier_partname
         result = identifier.split(':',1)
         if partname != None:
             result += [partname]
@@ -55,8 +55,8 @@ defaultJoin = DefaultStrategy.join
 
 class HashDistributeStrategy(object):
 
-    def split(self, xxx_todo_changeme2):
-        (identifier, partname) = xxx_todo_changeme2
+    def split(self, identifier_partname):
+        (identifier, partname) = identifier_partname
         hash = sha1(identifier.encode('utf-8')).hexdigest()
         if partname is None:
             partname = ""
@@ -149,10 +149,10 @@ class StorageComponent(object):
     def listIdentifiers(self, partname=None, identifierPrefix=''):
         return (identifier for identifier, ignored in self.glob((identifierPrefix, partname)))
 
-    def glob(self, xxx_todo_changeme3):
-        (prefix, wantedPartname) = xxx_todo_changeme3
-        def filterPrefixAndPart(xxx_todo_changeme):
-            (identifier, partname) = xxx_todo_changeme
+    def glob(self, identifier_partname):
+        (prefix, wantedPartname) = identifier_partname
+        def filterPrefixAndPart(identifier_partname):
+            (identifier, partname) = identifier_partname
             return identifier.startswith(prefix) and (wantedPartname == None or wantedPartname == partname)
 
         return ((identifier, partname) for (identifier, partname) in self._storage.glob((prefix, wantedPartname))
