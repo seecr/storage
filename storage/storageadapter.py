@@ -27,7 +27,7 @@ from meresco.core import Observable
 
 class StorageAdapter(Observable):
     def retrieveData(self, identifier, name):
-        raise StopIteration(self.getData(identifier, name))
+        return self.getData(identifier, name)
         yield
 
     def getData(self, identifier, name):
