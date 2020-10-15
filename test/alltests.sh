@@ -4,7 +4,7 @@
 # "Storage" stores data in a reliable, extendable filebased storage
 # with great performance.
 #
-# Copyright (C) 2011-2013 Seecr (Seek You Too B.V.) http://seecr.nl
+# Copyright (C) 2011-2013, 2020 Seecr (Seek You Too B.V.) https://seecr.nl
 #
 # This file is part of "Storage"
 #
