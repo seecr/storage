@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ## begin license ##
 #
 # "Storage" stores data in a reliable, extendable filebased storage
