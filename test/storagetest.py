@@ -167,7 +167,7 @@ class StorageTest(TestCase):
         self.assertEqual('data', next(s.get('mystore').get('mydata')))
 
     def testStrangeCharactersInName(self):
-        self.assertName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ')
+        self.assertName('~!@# $%^&*()\t_+\\\f\n/{}[-]ç«»\'´`äëŝÄ')
         self.assertName('---------')
         self.assertName('sudo rm -rf /*')
         self.assertName('version,v')
@@ -291,7 +291,7 @@ class StorageTest(TestCase):
     def testEnumerateFilesWithStrangeNames(self):
         def create(storage, name):
             storage.put(name).close()
-        self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ', create)
+        self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n/{}[-]ç«»\'´`äëŝÄ', create)
         self.assertEnumerateName('---------', create)
         self.assertEnumerateName('sudo rm -rf /*', create)
         self.assertEnumerateName('version,v', create)
@@ -301,7 +301,7 @@ class StorageTest(TestCase):
     def testEnumerateStorageWithStrangeNames(self):
         def create(storage, name):
             storage.put(name, Storage())
-        self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n\/{}[-]ç«»\'´`äëŝÄ', create)
+        self.assertEnumerateName('~!@# $%^&*()\t_+\\\f\n/{}[-]ç«»\'´`äëŝÄ', create)
         self.assertEnumerateName('---------', create)
         self.assertEnumerateName('sudo rm -rf /*', create)
         self.assertEnumerateName('version,v', create)
