@@ -1,2 +1,2 @@
-python-escaping (>= 0.1)
-python-escaping (<< 0.2)
+python3-escaping (>= 0.2)
+python3-escaping (<< 0.3)
